@@ -759,6 +759,107 @@ app.post("/api/cms-data", csrfProtection, inputScrubber, (req, res) => {
   return res.json({ success: true, message: "WP DB fully synchronized!" });
 });
 
+// AI Writing Assistant endpoint for English post editor
+app.post("/api/ai/writing-assistant", async (req, res) => {
+  try {
+    const { action, text, title, context, keyword } = req.body;
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (apiKey) {
+      const { GoogleGenAI } = await import("@google/genai");
+      const ai = new GoogleGenAI({ apiKey });
+      
+      let prompt = "";
+      switch (action) {
+        case "grammar":
+          prompt = `Correct all grammar, punctuation, and spelling errors in the following English text. Maintain the original meaning and tone. Return ONLY the corrected text without preamble or quotes:\n\n${text}`;
+          break;
+        case "spelling":
+          prompt = `Fix any spelling errors in the following English text. Return ONLY the corrected text:\n\n${text}`;
+          break;
+        case "rewrite":
+          prompt = `Rewrite the following English text to make it clearer, more engaging, and professional. Return ONLY the rewritten text:\n\n${text}`;
+          break;
+        case "expand":
+          prompt = `Expand the following English text with relevant details, explanations, and context while preserving a professional tone. Return ONLY the expanded text:\n\n${text}`;
+          break;
+        case "shorten":
+          prompt = `Summarize and shorten the following English text into concise, impactful points or paragraphs. Return ONLY the shortened text:\n\n${text}`;
+          break;
+        case "readability":
+          prompt = `Improve the readability of the following English text. Use active voice, clear sentence structures, and accessible vocabulary. Return ONLY the revised text:\n\n${text}`;
+          break;
+        case "seo":
+          prompt = `Optimize the following English text for SEO${keyword ? ` targeting keyword '${keyword}'` : ""}. Naturally incorporate key search terms, headings, and clear structure. Return ONLY the optimized text:\n\n${text}`;
+          break;
+        case "humanize":
+          prompt = `Humanize the following text so it reads naturally like a human author wrote it, avoiding repetitive AI tropes or clichés. Return ONLY the humanized text:\n\n${text}`;
+          break;
+        case "tone":
+          prompt = `Improve the tone of the following English text to be respectful, inspiring, and authoritative (suited for an Islamic & Quranic education academy). Return ONLY the improved text:\n\n${text}`;
+          break;
+        case "intro":
+          prompt = `Write a captivating 2-paragraph introduction for an article titled "${title || text}". Highlight its importance and set an engaging tone. Return ONLY the introduction text:\n\n${text}`;
+          break;
+        case "conclusion":
+          prompt = `Write a strong concluding summary for an article titled "${title || "Article"}". Summarize key takeaways and include a soft call to action to study Quran and Tajweed. Return ONLY the conclusion:\n\n${text}`;
+          break;
+        case "faq":
+          prompt = `Generate 3 frequently asked questions with clear answers based on this article title/topic: "${title || text}". Format as clean Q&A pairs:\n\n${text}`;
+          break;
+        case "meta_title":
+          prompt = `Generate a compelling, SEO-optimized Meta Title (under 60 characters) for an article titled "${title || text}"${keyword ? ` focused on '${keyword}'` : ""}. Return ONLY the title text without quotes:\n\n${text}`;
+          break;
+        case "meta_desc":
+          prompt = `Generate an engaging SEO Meta Description (between 120 and 150 characters) for an article titled "${title || text}"${keyword ? ` focused on '${keyword}'` : ""}. Return ONLY the meta description text without quotes:\n\n${text}`;
+          break;
+        default:
+          prompt = `Improve the following English text for a blog post:\n\n${text}`;
+      }
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt
+      });
+
+      const resultText = response.text || "";
+      return res.json({ success: true, result: resultText.trim() });
+    } else {
+      // Fallback response generator if GEMINI_API_KEY is not configured
+      let fallbackResult = "";
+      const cleanText = (text || "").replace(/<[^>]*>/g, "").trim();
+      const articleTitle = title || "Quran & Tajweed Study Guide";
+
+      if (action === "grammar" || action === "spelling") {
+        fallbackResult = cleanText ? cleanText.replace(/\bteh\b/gi, "the").replace(/\brecitiation\b/gi, "recitation") : "Proper recitation of the Holy Quran requires mastering the rules of Tajweed, including correct articulation points (Makharij).";
+      } else if (action === "rewrite") {
+        fallbackResult = cleanText ? `Mastering Tajweed and Quranic recitation enhances spiritual understanding. ${cleanText}` : `Developing a daily Quranic reading routine under certified tutors brings immense spiritual growth and clarity.`;
+      } else if (action === "expand") {
+        fallbackResult = cleanText ? `${cleanText}\n\nFurthermore, continuous practice under qualified teachers ensures accurate application of Ghunnah, Madd, and Ikhfa rules. Regular feedback from an experienced Qari builds confidence and precision in every ayah.` : `Learning Quranic recitation with proper Tajweed is a lifelong journey. Guided practice under certified Huffadh allows students to develop correct Makharij, master subtle phonetic rules, and build a deep, meaningful connection with the divine text.`;
+      } else if (action === "shorten") {
+        fallbackResult = cleanText ? cleanText.split(".").slice(0, 2).join(".") + "." : "Consistent Tajweed practice under qualified scholars ensures accurate Quran recitation.";
+      } else if (action === "intro") {
+        fallbackResult = `Reciting the Holy Quran with proper Tajweed is both a spiritual obligation and an enriching personal journey. Understanding correct phonetics, Makharij (points of articulation), and Sifat (characteristics of letters) allows reciters to convey the divine text as it was revealed.\n\nIn this comprehensive guide, we explore the essential rules and practical techniques every learner needs to achieve beauty, clarity, and precision in their Quranic recitation.`;
+      } else if (action === "conclusion") {
+        fallbackResult = `In conclusion, mastering Tajweed is a rewarding endeavor that transforms your connection with the Holy Quran. By committing to regular practice and seeking guidance from experienced teachers, you build accuracy and reverence in every recitation.\n\nReady to elevate your recitation? Book a free 1-on-1 evaluation session with certified tutors at Truth Quran Academy today.`;
+      } else if (action === "faq") {
+        fallbackResult = `Q: Why is Tajweed important in Quran recitation?\nA: Tajweed preserves the authentic pronunciation of the Quran, preventing errors in meaning and ensuring the letters are articulated correctly as revealed.\n\nQ: Can beginners learn Tajweed online?\nA: Yes! Private 1-on-1 online classes provide direct feedback from certified tutors, making learning easy and flexible for students of all ages.`;
+      } else if (action === "meta_title") {
+        fallbackResult = `${articleTitle.slice(0, 45)} | Essential Tajweed Guide`;
+      } else if (action === "meta_desc") {
+        fallbackResult = `Discover key Tajweed rules and practical Quranic recitation techniques in this expert guide from Truth Quran Academy certified tutors.`;
+      } else {
+        fallbackResult = cleanText || `Learn Quran recitation and Tajweed with private 1-on-1 online sessions taught by certified Huffadh.`;
+      }
+
+      return res.json({ success: true, result: fallbackResult, fallbackUsed: true });
+    }
+  } catch (err: any) {
+    console.error("AI Assistant Error:", err);
+    return res.status(500).json({ error: "Failed to generate AI writing content." });
+  }
+});
+
 // XML Escape Helper for valid Google-compliant XML
 const xmlEscape = (str: string = ""): string => {
   return String(str)
