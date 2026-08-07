@@ -24,7 +24,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { blogPostsData } from "../data";
-import { getCMSData, DEFAULT_POST_IMAGE, cleanHTMLToExcerpt } from "../cmsStore";
+import { getCMSData, DEFAULT_POST_IMAGE, cleanHTMLToExcerpt, ensureBlogPostSEO, BlogPost } from "../cmsStore";
 
 interface BlogSectionProps {
   currentView: string;
@@ -39,6 +39,92 @@ interface Comment {
   date: string;
   text: string;
   avatar: string;
+}
+
+interface BlogCardProps {
+  key?: string | number;
+  post: BlogPost;
+  index: number;
+  onClick: () => void;
+}
+
+// Standardized Reusable Blog Card Component matching exact design specs
+export function BlogCard({ post, index, onClick }: BlogCardProps) {
+  const cardImg = post.coverImage || post.featuredImage || DEFAULT_POST_IMAGE;
+  const cleanExcerpt = cleanHTMLToExcerpt(post.content, post.excerpt);
+  const displayCategory = post.category || "Tajweed Rules";
+  const displayDate = post.date || post.publishDate || "August 2026";
+  const displayReadTime = post.readTime || "5 min read";
+  const displayAuthor = post.author?.name || "Muhammad Zain";
+
+  return (
+    <motion.div
+      key={post.id}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -6, scale: 1.01, transition: { duration: 0.25 } }}
+      transition={{ duration: 0.5, delay: Math.min(index * 0.08, 0.4) }}
+      onClick={onClick}
+      className="bg-[#12141b]/70 border border-[#d9b45c]/12 rounded-2xl overflow-hidden hover:border-[#d9b45c]/35 transition-all duration-300 flex flex-col h-full cursor-pointer group shadow-lg"
+    >
+      {/* 1. Media Card Cover & Featured Image */}
+      <div className="w-full aspect-[3/2] bg-[#07080b] relative overflow-hidden">
+        <img
+          src={cardImg}
+          alt={post.title || "Blog Article"}
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            e.currentTarget.src = DEFAULT_POST_IMAGE;
+          }}
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#12141b] via-transparent to-transparent pointer-events-none" />
+        {/* 2. Category Badge */}
+        <span className="absolute top-4 left-4 text-[9px] font-sans uppercase font-bold text-[#f2d98a] bg-[#07080b]/85 border border-[#d9b45c]/25 px-2.5 py-1 rounded-full z-10 shadow-md">
+          {displayCategory}
+        </span>
+      </div>
+
+      {/* Content Card Panel */}
+      <div className="p-6 flex-1 flex flex-col justify-between space-y-4 text-left">
+        <div className="space-y-2">
+          {/* Metadata Row: 3. Publish Date & 4. Reading Time */}
+          <div className="flex items-center space-x-3 text-[10px] font-sans text-[#c9c2ab]">
+            <span className="flex items-center space-x-1">
+              <Calendar size={11} className="text-[#d9b45c]" />
+              <span>{displayDate}</span>
+            </span>
+            <span className="w-1 h-1 rounded-full bg-[#d9b45c]/20" />
+            <span className="flex items-center space-x-1">
+              <Clock size={11} className="text-[#d9b45c]" />
+              <span>{displayReadTime}</span>
+            </span>
+          </div>
+
+          {/* 5. Article Title */}
+          <h3 className="font-serif text-[#f3ecd8] group-hover:text-[#f2d98a] text-sm md:text-base font-medium tracking-tight leading-snug line-clamp-2 transition-colors">
+            {post.title}
+          </h3>
+
+          {/* 6. Short Description (Excerpt) */}
+          <p className="text-xs text-[#c9c2ab] leading-relaxed line-clamp-3">
+            {cleanExcerpt}
+          </p>
+        </div>
+
+        {/* Card Footer: 7. "Read Article" Button & 8. Author Name */}
+        <div className="pt-2 border-t border-[#d9b45c]/8 flex items-center justify-between">
+          <span className="text-[10px] font-sans uppercase font-extrabold tracking-widest text-[#d9b45c] group-hover:text-[#f2d98a] flex items-center space-x-1 transition-colors">
+            <span>Read Article</span>
+            <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+          </span>
+          <span className="text-[10px] font-sans text-[#c9c2ab] italic">
+            By {displayAuthor}
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  );
 }
 
 export default function BlogSection({
@@ -81,8 +167,26 @@ export default function BlogSection({
     return () => window.removeEventListener("cms_data_updated", handleSync);
   }, []);
 
-  const allPosts = (cms.blogPosts && cms.blogPosts.length > 0) ? cms.blogPosts : (cms.posts || blogPostsData);
-  const currentPosts = allPosts.filter(p => !p.status || p.status.toLowerCase() === "published" || p.status.toLowerCase() === "approved");
+  const rawPosts = (cms.blogPosts && cms.blogPosts.length > 0) ? cms.blogPosts : (cms.posts || blogPostsData);
+  const allPosts = rawPosts.map(ensureBlogPostSEO);
+
+  const publishedPosts = allPosts.filter(p => {
+    if (!p.status) return true;
+    const s = String(p.status).trim().toLowerCase();
+    return s === "published" || s === "approved" || s === "publish" || s === "active";
+  });
+
+  const parsePostDate = (dateStr?: string) => {
+    if (!dateStr) return 0;
+    const time = Date.parse(dateStr);
+    return isNaN(time) ? 0 : time;
+  };
+
+  const currentPosts = [...publishedPosts].sort((a, b) => {
+    const timeA = parsePostDate(a.date || a.publishDate || a.lastUpdated);
+    const timeB = parsePostDate(b.date || b.publishDate || b.lastUpdated);
+    return timeB - timeA;
+  });
 
   const categories = ["All", ...Array.from(new Set(allPosts.map(p => p.category).filter(Boolean)))];
 
@@ -615,74 +719,14 @@ export default function BlogSection({
     return (
       <div className="space-y-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="home-blog-grid">
-          {currentPosts.slice(0, 3).map((post, index) => {
-            const cardImg = post.coverImage || post.featuredImage || DEFAULT_POST_IMAGE;
-            const cleanExcerpt = cleanHTMLToExcerpt(post.content, post.excerpt);
-
-            return (
-              <motion.div
-                key={post.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -6, scale: 1.01, transition: { duration: 0.25 } }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                onClick={() => handlePostClick(post.id)}
-                className="bg-[#12141b]/70 border border-[#d9b45c]/12 rounded-2xl overflow-hidden hover:border-[#d9b45c]/35 transition-all duration-300 flex flex-col h-full cursor-pointer group"
-              >
-                {/* Media Card Cover */}
-                <div className="w-full aspect-[3/2] bg-[#07080b] relative overflow-hidden">
-                  <img
-                    src={cardImg}
-                    alt={post.title}
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      e.currentTarget.src = DEFAULT_POST_IMAGE;
-                    }}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#12141b] via-transparent to-transparent pointer-events-none" />
-                  <span className="absolute top-4 left-4 text-[9px] font-sans uppercase font-bold text-[#f2d98a] bg-[#07080b]/85 border border-[#d9b45c]/25 px-2.5 py-1 rounded-full z-10">
-                    {post.category || "Tajweed Rules"}
-                  </span>
-                </div>
-
-                {/* Content Card Panel */}
-                <div className="p-6 flex-1 flex flex-col justify-between space-y-4 text-left">
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-3 text-[10px] font-sans text-[#c9c2ab]">
-                      <span className="flex items-center space-x-1">
-                        <Calendar size={11} className="text-[#d9b45c]" />
-                        <span>{post.date || "July 2026"}</span>
-                      </span>
-                      <span className="w-1 h-1 rounded-full bg-[#d9b45c]/20" />
-                      <span className="flex items-center space-x-1">
-                        <Clock size={11} className="text-[#d9b45c]" />
-                        <span>{post.readTime || "5 min read"}</span>
-                      </span>
-                    </div>
-                    <h3 className="font-serif text-[#f3ecd8] group-hover:text-[#f2d98a] text-sm md:text-base font-medium tracking-tight leading-snug line-clamp-2 transition-colors">
-                      {post.title}
-                    </h3>
-                    <p className="text-xs text-[#c9c2ab] leading-relaxed line-clamp-3">
-                      {cleanExcerpt}
-                    </p>
-                  </div>
-
-                  {/* Card Button footer link */}
-                  <div className="pt-2 border-t border-[#d9b45c]/8 flex items-center justify-between">
-                    <span className="text-[10px] font-sans uppercase font-extrabold tracking-widest text-[#d9b45c] group-hover:text-[#f2d98a] flex items-center space-x-1 transition-colors">
-                      <span>Read Article</span>
-                      <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-                    </span>
-                    <span className="text-[10px] font-sans text-[#c9c2ab] italic">
-                      By {post.author?.name || "Muhammad Zain"}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+          {currentPosts.slice(0, 3).map((post, index) => (
+            <BlogCard
+              key={post.id || post.slug}
+              post={post}
+              index={index}
+              onClick={() => handlePostClick(post.id)}
+            />
+          ))}
         </div>
 
         {/* View All Button */}
@@ -750,72 +794,14 @@ export default function BlogSection({
 
       {/* Full Grid Panel */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="blog-grid">
-        {filteredPosts.map((post, index) => {
-          const cardImg = post.coverImage || post.featuredImage || DEFAULT_POST_IMAGE;
-          const cleanExcerpt = cleanHTMLToExcerpt(post.content, post.excerpt);
-
-          return (
-            <motion.div
-              key={post.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.08 }}
-              onClick={() => handlePostClick(post.id)}
-              className="bg-[#12141b]/70 border border-[#d9b45c]/12 rounded-2xl overflow-hidden hover:border-[#d9b45c]/35 transition-all duration-300 flex flex-col h-full cursor-pointer group"
-            >
-              {/* Media Card Cover */}
-              <div className="w-full aspect-[3/2] bg-[#07080b] relative overflow-hidden">
-                <img
-                  src={cardImg}
-                  alt={post.title}
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    e.currentTarget.src = DEFAULT_POST_IMAGE;
-                  }}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#12141b] via-transparent to-transparent pointer-events-none" />
-                <span className="absolute top-4 left-4 text-[9px] font-sans uppercase font-bold text-[#f2d98a] bg-[#07080b]/85 border border-[#d9b45c]/25 px-2.5 py-1 rounded-full z-10">
-                  {post.category || "Tajweed Rules"}
-                </span>
-              </div>
-
-              {/* Content Card Panel */}
-              <div className="p-6 flex-1 flex flex-col justify-between space-y-4 text-left">
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-3 text-[10px] font-sans text-[#c9c2ab]">
-                    <span className="flex items-center space-x-1">
-                      <Calendar size={11} className="text-[#d9b45c]" />
-                      <span>{post.date || "July 2026"}</span>
-                    </span>
-                    <span className="w-1 h-1 rounded-full bg-[#d9b45c]/20" />
-                    <span className="flex items-center space-x-1">
-                      <Clock size={11} className="text-[#d9b45c]" />
-                      <span>{post.readTime || "5 min read"}</span>
-                    </span>
-                  </div>
-                  <h3 className="font-serif text-[#f3ecd8] group-hover:text-[#f2d98a] text-sm md:text-base font-medium tracking-tight leading-snug line-clamp-2 transition-colors">
-                    {post.title}
-                  </h3>
-                  <p className="text-xs text-[#c9c2ab] leading-relaxed line-clamp-3">
-                    {cleanExcerpt}
-                  </p>
-                </div>
-
-                {/* Card Button footer link */}
-                <div className="pt-2 border-t border-[#d9b45c]/8 flex items-center justify-between">
-                  <span className="text-[10px] font-sans uppercase font-extrabold tracking-widest text-[#d9b45c] group-hover:text-[#f2d98a] flex items-center space-x-1 transition-colors">
-                    <span>Read Article</span>
-                    <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-                  </span>
-                  <span className="text-[10px] font-sans text-[#c9c2ab] italic">
-                    By {post.author?.name || "Muhammad Zain"}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
+        {filteredPosts.map((post, index) => (
+          <BlogCard
+            key={post.id || post.slug}
+            post={post}
+            index={index}
+            onClick={() => handlePostClick(post.id)}
+          />
+        ))}
       </div>
 
       {filteredPosts.length === 0 && (
