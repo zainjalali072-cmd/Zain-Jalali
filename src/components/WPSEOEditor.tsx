@@ -52,7 +52,8 @@ import {
   AlertCircle,
   Wand2,
   Share2,
-  Layers
+  Layers,
+  Columns
 } from "lucide-react";
 
 interface WPSEOEditorProps {
@@ -167,6 +168,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
   // Device mode & Editor mode
   const [deviceFrame, setDeviceFrame] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const [editorMode, setEditorMode] = useState<"visual" | "code">("visual");
+  const [viewLayoutMode, setViewLayoutMode] = useState<"editor" | "split" | "preview">("editor");
 
   // Right Sidebar Active Tab ("seo" | "publish")
   const [activeSidebarTab, setActiveSidebarTab] = useState<"seo" | "publish">("seo");
@@ -769,6 +771,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
             href={`/blog/${currentPost.slug || currentPost.id}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => handleSaveArticle(currentPost.status || "published", true)}
             className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 bg-[#12141b] border border-emerald-500/30 rounded-xl text-xs font-bold text-emerald-400 hover:bg-emerald-500/10 transition-all"
             title="View Live Article Page"
           >
@@ -1033,6 +1036,42 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
 
               <div className="flex-1"></div>
 
+              {/* VIEW LAYOUT MODE SELECTOR (Editor / Split Live Preview / Full Live View) */}
+              <div className="flex items-center space-x-1 bg-[#12141b] border border-[#d9b45c]/30 rounded-xl p-1">
+                <button
+                  type="button"
+                  onClick={() => setViewLayoutMode("editor")}
+                  className={`px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-lg transition-all ${
+                    viewLayoutMode === "editor" ? "bg-[#d9b45c] text-black shadow-sm" : "text-[#c9c2ab] hover:text-white"
+                  }`}
+                  title="Standard Writing Editor"
+                >
+                  Editor
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewLayoutMode("split")}
+                  className={`px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-lg transition-all flex items-center space-x-1 ${
+                    viewLayoutMode === "split" ? "bg-[#d9b45c] text-black shadow-sm" : "text-[#c9c2ab] hover:text-white"
+                  }`}
+                  title="Side-by-Side Live Preview"
+                >
+                  <Columns size={12} />
+                  <span>Split Live Preview</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewLayoutMode("preview")}
+                  className={`px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-lg transition-all flex items-center space-x-1 ${
+                    viewLayoutMode === "preview" ? "bg-[#d9b45c] text-black shadow-sm" : "text-[#c9c2ab] hover:text-white"
+                  }`}
+                  title="Live Article View"
+                >
+                  <Eye size={12} />
+                  <span>Full Live View</span>
+                </button>
+              </div>
+
               {/* AI WRITING ASSISTANT BUTTON */}
               <button
                 type="button"
@@ -1045,36 +1084,122 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
 
             </div>
 
-            {/* DRAG & DROP AREA OVER CANVAS */}
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDraggingOver(true);
-              }}
-              onDragLeave={() => setIsDraggingOver(false)}
-              onDrop={handleFileDrop}
-              className={`relative p-4 transition-all ${isDraggingOver ? "bg-[#d9b45c]/10 ring-2 ring-[#d9b45c]" : "bg-[#07080b]"}`}
-            >
-              {isDraggingOver && (
-                <div className="absolute inset-0 z-30 bg-[#0e1017]/90 backdrop-blur-sm flex flex-col items-center justify-center border-2 border-dashed border-[#d9b45c] rounded-xl text-[#f2d98a]">
-                  <Upload size={36} className="animate-bounce" />
-                  <p className="mt-2 text-sm font-bold">Drop Image to Upload & Insert into Article</p>
+            {/* MAIN CONTENT CANVAS / SIDE-BY-SIDE SPLIT PREVIEW */}
+            {viewLayoutMode === "preview" ? (
+              /* FULL LIVE ARTICLE PREVIEW */
+              <div className="p-6 bg-[#07080b] border border-[#d9b45c]/20 rounded-b-2xl space-y-6 max-h-[600px] overflow-y-auto">
+                <div className="border-b border-white/10 pb-4">
+                  <span className="text-[10px] font-bold text-[#d9b45c] uppercase tracking-wider">{currentPost.category || "Tajweed Rules"}</span>
+                  <h1 className="text-2xl md:text-3xl font-serif font-bold text-[#f3ecd8] mt-1">{currentPost.title || "Untitled Article"}</h1>
+                  <p className="text-xs text-[#c9c2ab] mt-2 italic">{currentPost.excerpt || cleanHTMLToExcerpt(currentPost.content, "")}</p>
                 </div>
-              )}
+                {(currentPost.coverImage || currentPost.featuredImage) && (
+                  <img
+                    src={currentPost.coverImage || currentPost.featuredImage}
+                    alt={currentPost.imageAltText || "Featured"}
+                    className="w-full aspect-video object-cover rounded-2xl border border-white/10"
+                  />
+                )}
+                <div
+                  className="prose prose-invert max-w-none text-xs md:text-sm text-[#c9c2ab] leading-relaxed font-sans
+                    [&>h2]:font-serif [&>h2]:text-xl [&>h2]:text-[#f3ecd8] [&>h2]:font-bold [&>h2]:mt-6 [&>h2]:mb-3
+                    [&>h3]:font-serif [&>h3]:text-lg [&>h3]:text-[#f2d98a] [&>h3]:font-semibold [&>h3]:mt-5 [&>h3]:mb-2
+                    [&>p]:mb-4 [&>p]:leading-relaxed
+                    [&>ul]:my-4 [&>ul]:pl-5 [&>ul]:space-y-1 [&>ul>li]:list-disc [&>ul>li]:marker:text-[#d9b45c]
+                    [&>ol]:my-4 [&>ol]:pl-5 [&>ol]:space-y-1 [&>ol>li]:list-decimal [&>ol>li]:marker:text-[#d9b45c]
+                    [&>blockquote]:my-6 [&>blockquote]:p-4 [&>blockquote]:bg-[#12141b] [&>blockquote]:border-l-4 [&>blockquote]:border-[#d9b45c] [&>blockquote]:italic [&>blockquote]:text-[#f2d98a] [&>blockquote]:rounded-r-xl"
+                  dangerouslySetInnerHTML={{ __html: currentPost.content || "<p class='text-gray-500 italic'>No content written yet.</p>" }}
+                />
+              </div>
+            ) : viewLayoutMode === "split" ? (
+              /* SIDE-BY-SIDE SPLIT PREVIEW */
+              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10 bg-[#07080b]">
+                {/* LEFT: TEXTAREA EDITOR */}
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDraggingOver(true);
+                  }}
+                  onDragLeave={() => setIsDraggingOver(false)}
+                  onDrop={handleFileDrop}
+                  className={`relative p-4 transition-all ${isDraggingOver ? "bg-[#d9b45c]/10 ring-2 ring-[#d9b45c]" : ""}`}
+                >
+                  {isDraggingOver && (
+                    <div className="absolute inset-0 z-30 bg-[#0e1017]/90 backdrop-blur-sm flex flex-col items-center justify-center border-2 border-dashed border-[#d9b45c] rounded-xl text-[#f2d98a]">
+                      <Upload size={36} className="animate-bounce" />
+                      <p className="mt-2 text-sm font-bold">Drop Image to Upload & Insert</p>
+                    </div>
+                  )}
+                  <textarea
+                    id="gutenberg-content-textarea"
+                    value={currentPost.content}
+                    onChange={(e) => {
+                      handleUpdateField("content", e.target.value);
+                      pushHistory(e.target.value);
+                    }}
+                    placeholder="Write article content here..."
+                    rows={20}
+                    className="w-full bg-transparent text-xs md:text-sm text-[#c9c2ab] font-mono leading-relaxed p-2 outline-none resize-y"
+                  ></textarea>
+                </div>
 
-              {/* VISUAL / HTML CONTENT TEXTAREA */}
-              <textarea
-                id="gutenberg-content-textarea"
-                value={currentPost.content}
-                onChange={(e) => {
-                  handleUpdateField("content", e.target.value);
-                  pushHistory(e.target.value);
+                {/* RIGHT: REAL-TIME LIVE RENDERED PREVIEW */}
+                <div className="p-4 bg-[#0e1017]/80 overflow-y-auto max-h-[550px] space-y-4">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#d9b45c]">Real-time Live Preview</span>
+                    <span className="text-[10px] font-mono text-[#c9c2ab]">Truth Quran Theme</span>
+                  </div>
+                  <h2 className="text-lg font-serif font-bold text-[#f3ecd8]">{currentPost.title || "Article Title Preview"}</h2>
+                  {(currentPost.coverImage || currentPost.featuredImage) && (
+                    <img
+                      src={currentPost.coverImage || currentPost.featuredImage}
+                      alt="Featured"
+                      className="w-full h-36 object-cover rounded-xl border border-white/10"
+                    />
+                  )}
+                  <div
+                    className="prose prose-invert max-w-none text-xs text-[#c9c2ab] leading-relaxed font-sans
+                      [&>h2]:font-serif [&>h2]:text-base [&>h2]:text-[#f3ecd8] [&>h2]:font-bold [&>h2]:mt-4 [&>h2]:mb-2
+                      [&>h3]:font-serif [&>h3]:text-sm [&>h3]:text-[#f2d98a] [&>h3]:font-semibold [&>h3]:mt-3 [&>h3]:mb-1
+                      [&>p]:mb-3
+                      [&>ul]:my-3 [&>ul]:pl-4 [&>ul>li]:list-disc [&>ul>li]:marker:text-[#d9b45c]
+                      [&>blockquote]:my-4 [&>blockquote]:p-3 [&>blockquote]:bg-[#12141b] [&>blockquote]:border-l-2 [&>blockquote]:border-[#d9b45c] [&>blockquote]:italic [&>blockquote]:text-[#f2d98a]"
+                    dangerouslySetInnerHTML={{ __html: currentPost.content || "<p class='text-gray-500 italic'>Type on the left to see live preview...</p>" }}
+                  />
+                </div>
+              </div>
+            ) : (
+              /* STANDARD EDITOR MODE */
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDraggingOver(true);
                 }}
-                placeholder="Write your English article content here..."
-                rows={18}
-                className="w-full bg-transparent text-xs md:text-sm text-[#c9c2ab] font-mono leading-relaxed p-2 outline-none resize-y"
-              ></textarea>
-            </div>
+                onDragLeave={() => setIsDraggingOver(false)}
+                onDrop={handleFileDrop}
+                className={`relative p-4 transition-all ${isDraggingOver ? "bg-[#d9b45c]/10 ring-2 ring-[#d9b45c]" : "bg-[#07080b]"}`}
+              >
+                {isDraggingOver && (
+                  <div className="absolute inset-0 z-30 bg-[#0e1017]/90 backdrop-blur-sm flex flex-col items-center justify-center border-2 border-dashed border-[#d9b45c] rounded-xl text-[#f2d98a]">
+                    <Upload size={36} className="animate-bounce" />
+                    <p className="mt-2 text-sm font-bold">Drop Image to Upload & Insert into Article</p>
+                  </div>
+                )}
+
+                {/* VISUAL / HTML CONTENT TEXTAREA */}
+                <textarea
+                  id="gutenberg-content-textarea"
+                  value={currentPost.content}
+                  onChange={(e) => {
+                    handleUpdateField("content", e.target.value);
+                    pushHistory(e.target.value);
+                  }}
+                  placeholder="Write your English article content here..."
+                  rows={18}
+                  className="w-full bg-transparent text-xs md:text-sm text-[#c9c2ab] font-mono leading-relaxed p-2 outline-none resize-y"
+                ></textarea>
+              </div>
+            )}
 
             {/* STATS BAR BELOW CANVAS */}
             <div className="bg-[#0e1017] border-t border-white/10 px-4 py-2 flex flex-wrap items-center justify-between text-[11px] text-[#c9c2ab]/80 font-mono">
