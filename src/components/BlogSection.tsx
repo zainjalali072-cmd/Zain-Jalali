@@ -192,17 +192,21 @@ export default function BlogSection({
 
   // Handle post clicks
   const handlePostClick = (postId: string) => {
-    const found = allPosts.find(p => p.id === postId || p.slug === postId || (p.slug && p.slug.toLowerCase() === postId.toLowerCase()));
+    const normalizeStr = (s?: string) => (s || "").trim().toLowerCase();
+    const found = allPosts.find(p => 
+      p.id === postId || 
+      p.slug === postId || 
+      normalizeStr(p.id) === normalizeStr(postId) ||
+      normalizeStr(p.slug) === normalizeStr(postId)
+    );
     const identifier = found?.slug || found?.id || postId;
     setActivePostId(identifier);
-    setView("blog-post");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Back navigation
   const handleBackToBlog = () => {
     setActivePostId(null);
-    setView("blog");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -236,12 +240,19 @@ export default function BlogSection({
 
   // Render Single Full Blog Post View
   if (currentView === "blog-post" && activePostId) {
-    const normalize = (str?: string) => (str || "").trim().toLowerCase().replace(/\/$/, "");
+    const normalize = (str?: string) => {
+      if (!str) return "";
+      let s = decodeURIComponent(str).trim().toLowerCase();
+      s = s.replace(/^blog\//, "").replace(/\/$/, "");
+      return s.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    };
+
     const target = normalize(activePostId);
     const post = allPosts.find((p) => {
+      if (p.id === activePostId || p.slug === activePostId) return true;
       const pid = normalize(p.id);
       const pslug = normalize(p.slug);
-      const ptitleSlug = normalize(p.title).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const ptitleSlug = normalize(p.title);
       return pid === target || pslug === target || ptitleSlug === target;
     });
     if (!post) {
@@ -249,7 +260,7 @@ export default function BlogSection({
         <div className="text-center py-20">
           <p className="text-base text-[#c9c2ab]">Article not found.</p>
           <button 
-            onClick={() => setView("blog")}
+            onClick={handleBackToBlog}
             className="mt-4 px-6 py-2.5 rounded-full bg-[#d9b45c] text-[#07080b] font-sans font-bold uppercase text-xs tracking-wider cursor-pointer"
           >
             Back to Blog
