@@ -38,7 +38,9 @@
     "typescript": "~5.8.2",
     "vite": "^6.2.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "sharp": "^0.35.3"
+  },
   "overrides": {
     "rollup": "npm:@rollup/wasm-node@^4.62.3"
   }
