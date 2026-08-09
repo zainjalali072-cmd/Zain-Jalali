@@ -1,5 +1,6 @@
 import React from "react";
 import ContactForm from "./ContactForm";
+import MapSection from "./MapSection";
 
 export default function ContactPage() {
   return (
@@ -17,8 +18,9 @@ export default function ContactPage() {
         </p>
       </div>
 
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto space-y-16">
         <ContactForm />
+        <MapSection className="border-t-0 py-0" />
       </div>
     </div>
   );

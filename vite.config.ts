@@ -42,6 +42,9 @@ function gscMetaInjector() {
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss(), gscMetaInjector()],
+    define: {
+      'process.env.GOOGLE_MAPS_PLATFORM_KEY': JSON.stringify(process.env.GOOGLE_MAPS_PLATFORM_KEY || '')
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

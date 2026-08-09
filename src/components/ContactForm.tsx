@@ -3,7 +3,6 @@ import {
   Phone, 
   Mail, 
   MapPin, 
-  MessageCircle, 
   Send, 
   CheckCircle, 
   Sparkles, 
@@ -12,6 +11,7 @@ import {
   GraduationCap, 
   Calendar 
 } from "lucide-react";
+import WhatsAppIcon from "./WhatsAppIcon";
 import { getCMSData, saveCMSData } from "../cmsStore";
 
 export default function ContactForm() {
@@ -156,7 +156,7 @@ export default function ContactForm() {
           {/* Card 4: WhatsApp */}
           <div className="p-5 rounded-2xl bg-[#12141b]/65 border-2 border-[#1fae5b]/10 hover:border-[#1fae5b]/45 hover:bg-[#12141b]/95 transition-all duration-300 flex items-start space-x-4 group shadow-lg">
             <div className="w-12 h-12 rounded-xl bg-[#1fae5b]/10 border border-[#1fae5b]/20 flex items-center justify-center text-[#5fe396] flex-shrink-0 group-hover:bg-[#1fae5b] group-hover:text-white group-hover:shadow-[0_0_15px_rgba(31,174,91,0.4)] transition-all duration-300 shadow-inner">
-              <MessageCircle size={20} className="fill-current" />
+              <WhatsAppIcon size={20} />
             </div>
             <div className="space-y-1">
               <h5 className="font-sans font-bold text-[10px] text-[#5fe396] uppercase tracking-widest">Secure WhatsApp</h5>
@@ -174,7 +174,7 @@ export default function ContactForm() {
             rel="noopener noreferrer"
             className="w-full inline-flex items-center justify-center space-x-3 px-6 py-4.5 rounded-full bg-[#1fae5b]/10 border-2 border-[#1fae5b]/30 text-xs md:text-sm font-sans font-extrabold uppercase tracking-wider text-[#5fe396] hover:bg-[#1fae5b] hover:text-white hover:-translate-y-1 hover:shadow-[0_12px_35px_rgba(31,174,91,0.45)] transition-all duration-300"
           >
-            <MessageCircle size={18} className="fill-current" />
+            <WhatsAppIcon size={18} />
             <span>Chat Securely on WhatsApp Now</span>
           </a>
         </div>

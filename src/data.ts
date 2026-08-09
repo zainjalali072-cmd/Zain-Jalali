@@ -23,6 +23,7 @@ export const academyContact = {
   whatsapp: "https://wa.me/+923219347471",
   facebook: "https://facebook.com/truthquran",
   instagram: "https://instagram.com/truth_quran_786",
+  linkedin: "https://linkedin.com/company/truthquranacademy",
   developerName: "Abbas Ali",
   developerRole: "Full Stack Developer",
   developerGithub: "https://github.com",

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Facebook, Instagram, MessageCircle, Phone, Mail, MapPin, Sparkles } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Phone, Mail, MapPin, Sparkles } from "lucide-react";
+import WhatsAppIcon from "./WhatsAppIcon";
 import { academyContact, coursesData } from "../data";
 import logoImg from "../assets/images/truth_quran_new_logo_1784203145448.jpg";
 import { getCMSData } from "../cmsStore";
@@ -54,34 +55,50 @@ export default function Footer({ setView, onNavigate }: FooterProps) {
             <p className="text-xs text-[#c9c2ab] leading-relaxed max-w-sm">
               Truth Quran Academy is a premium global platform providing highly specialized, personalized 1-on-1 Quran, Tajweed, and Arabic language classes for children, sisters, and adults of all ages, taught by certified scholars.
             </p>
-            {/* Social Icons */}
+            {/* Social Icons with Colorful Badges */}
             <div className="flex items-center space-x-3 pt-2">
+              {/* Facebook */}
               <a
-                href={academyContact.facebook}
+                href={cms.facebookLink || academyContact.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full border border-[#d9b45c]/15 bg-[#0e1015] flex items-center justify-center text-[#c9c2ab] hover:text-[#f2d98a] hover:bg-[#d9b45c]/10 hover:border-[#d9b45c]/50 transition-all duration-300"
+                className="w-10 h-10 rounded-full border border-[#1877F2]/40 bg-[#1877F2]/15 flex items-center justify-center text-[#4285F4] hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] shadow-[0_0_12px_rgba(24,119,242,0.2)] hover:shadow-[0_0_20px_rgba(24,119,242,0.6)] hover:-translate-y-0.5 transition-all duration-300"
                 aria-label="Facebook Profile"
               >
-                <Facebook size={16} />
+                <Facebook size={18} />
               </a>
+
+              {/* Instagram */}
               <a
-                href={academyContact.instagram}
+                href={cms.instagramLink || academyContact.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full border border-[#d9b45c]/15 bg-[#0e1015] flex items-center justify-center text-[#c9c2ab] hover:text-[#f2d98a] hover:bg-[#d9b45c]/10 hover:border-[#d9b45c]/50 transition-all duration-300"
+                className="w-10 h-10 rounded-full border border-[#E4405F]/40 bg-[#E4405F]/15 flex items-center justify-center text-[#f43f5e] hover:bg-gradient-to-tr hover:from-[#f87171] hover:via-[#e11d48] hover:to-[#a855f7] hover:text-white hover:border-[#E4405F] shadow-[0_0_12px_rgba(228,64,95,0.2)] hover:shadow-[0_0_20px_rgba(228,64,95,0.6)] hover:-translate-y-0.5 transition-all duration-300"
                 aria-label="Instagram Profile"
               >
-                <Instagram size={16} />
+                <Instagram size={18} />
               </a>
+
+              {/* LinkedIn */}
               <a
-                href={`${academyContact.whatsapp}?text=Salam%20Truth%20Quran%20Academy.`}
+                href={cms.linkedinLink || academyContact.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full border border-[#d9b45c]/15 bg-[#0e1015] flex items-center justify-center text-[#c9c2ab] hover:text-[#5fe396] hover:bg-[#1fae5b]/10 hover:border-[#1fae5b]/40 transition-all duration-300"
+                className="w-10 h-10 rounded-full border border-[#0A66C2]/40 bg-[#0A66C2]/15 flex items-center justify-center text-[#38bdf8] hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2] shadow-[0_0_12px_rgba(10,102,194,0.2)] hover:shadow-[0_0_20px_rgba(10,102,194,0.6)] hover:-translate-y-0.5 transition-all duration-300"
+                aria-label="LinkedIn Profile"
+              >
+                <Linkedin size={18} />
+              </a>
+
+              {/* WhatsApp */}
+              <a
+                href={`${cms.whatsappLink || academyContact.whatsapp}?text=Salam%20Truth%20Quran%20Academy.`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full border border-[#25D366]/40 bg-[#25D366]/15 flex items-center justify-center text-[#4ade80] hover:bg-[#25D366] hover:text-white hover:border-[#25D366] shadow-[0_0_12px_rgba(37,211,102,0.2)] hover:shadow-[0_0_20px_rgba(37,211,102,0.6)] hover:-translate-y-0.5 transition-all duration-300"
                 aria-label="WhatsApp Support"
               >
-                <MessageCircle size={16} className="fill-current/10" />
+                <WhatsAppIcon size={18} />
               </a>
             </div>
           </div>

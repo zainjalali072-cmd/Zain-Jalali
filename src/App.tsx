@@ -40,6 +40,7 @@ import islamicKidsLearningBg from "./assets/images/islamic_kids_learning_1784120
 import islamicGirlQaidaBg from "./assets/images/islamic_girl_qaida_1784120204322.jpg";
 import FAQAccordion from "./components/FAQAccordion";
 import ContactForm from "./components/ContactForm";
+import MapSection from "./components/MapSection";
 import DeveloperCard from "./components/DeveloperCard";
 import Footer from "./components/Footer";
 import AutoOpeningQuran from "./components/AutoOpeningQuran";
@@ -981,6 +982,11 @@ export default function App() {
             <section id="contact" className="py-20 md:py-28 max-w-7xl mx-auto px-6">
               <ContactForm />
             </section>
+            )}
+
+            {/* GOOGLE MAP LOCATION SECTION */}
+            {cms.sectionsVisibility?.map !== false && (
+              <MapSection />
             )}
           </>
         )}

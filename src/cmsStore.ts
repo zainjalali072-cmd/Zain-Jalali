@@ -110,6 +110,7 @@ export interface CMSData {
   whatsappLink: string;
   facebookLink: string;
   instagramLink: string;
+  linkedinLink?: string;
   courses: Course[];
   whyUs: WhyUsPoint[];
   pricingPlans: PricingPlan[];
@@ -592,8 +593,12 @@ export const getCMSData = (): CMSData => {
           testimonials: true,
           faqs: true,
           blog: true,
-          contact: true
+          contact: true,
+          map: true
         };
+      }
+      if (parsed.sectionsVisibility.map === undefined) {
+        parsed.sectionsVisibility.map = true;
       }
       if (!parsed.sectionsOrder) {
         parsed.sectionsOrder = ["hero", "whyUs", "courses", "process", "pricing", "testimonials", "faqs", "blog", "contact"];
