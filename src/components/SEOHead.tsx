@@ -18,9 +18,13 @@ export default function SEOHead({ cmsData, currentView, activePostId }: SEOHeadP
       return fallback;
     };
 
+    let canonicalPath = window.location.pathname;
+    if (canonicalPath.length > 1 && canonicalPath.endsWith("/")) {
+      canonicalPath = canonicalPath.slice(0, -1);
+    }
+    let canonical: string = `https://truthquranacademy.com${canonicalPath}`;
     let title: string = getMetaStr(cmsData.seoSettings?.metaTitle, "Truth Quran Academy | 1-on-1 Online Quran & Tajweed Classes");
     let description: string = getMetaStr(cmsData.seoSettings?.metaDescription, "Learn Holy Quran recitation, Tajweed rules, Hifz, and Quranic Arabic from certified native scholars in private 1-on-1 classrooms.");
-    let canonical: string = window.location.href;
     let ogTitle: string = title;
     let ogDesc: string = description;
     let ogImage: string = getMetaStr(cmsData.seoSettings?.ogImage, "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200");
@@ -38,7 +42,7 @@ export default function SEOHead({ cmsData, currentView, activePostId }: SEOHeadP
       if (post) {
         title = post.metaTitle || post.seoTitle || `${post.title} | Truth Quran Academy`;
         description = post.metaDescription || post.excerpt || description;
-        canonical = post.canonicalUrl || window.location.href;
+        canonical = post.canonicalUrl || `https://truthquranacademy.com/blog/${post.slug || post.id}`;
         ogTitle = post.ogTitle || title;
         ogDesc = post.ogDescription || description;
         ogImage = post.ogImage || post.coverImage || ogImage;

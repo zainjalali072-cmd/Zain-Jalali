@@ -944,6 +944,15 @@ app.get("/page-sitemap.xml", (req, res) => {
   return res.status(200).send(xml);
 });
 
+// Helper to slugify string
+const slugify = (text: string): string => {
+  return String(text || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};
+
 // 3. Post Sitemap (/post-sitemap.xml)
 app.get("/post-sitemap.xml", (req, res) => {
   const db = getDatabase();
@@ -962,19 +971,31 @@ app.get("/post-sitemap.xml", (req, res) => {
   published.forEach((post: any) => {
     const slug = post.slug || post.id;
     const postDate = formatIsoDate(post.date || post.publishDate || now);
-    const imgUrl = post.featuredImage || post.coverImage;
+    const postUrl = `${domain}/blog/${slug}`;
+    const rawImg = post.featuredImage || post.coverImage;
 
     xml += `  <url>\n`;
-    xml += `    <loc>${domain}/blog/${xmlEscape(slug)}</loc>\n`;
+    xml += `    <loc>${xmlEscape(postUrl)}</loc>\n`;
     xml += `    <lastmod>${postDate}</lastmod>\n`;
     xml += `    <changefreq>weekly</changefreq>\n`;
     xml += `    <priority>0.8</priority>\n`;
-    if (imgUrl) {
+
+    if (rawImg && typeof rawImg === "string" && rawImg.trim()) {
+      let imgUrl = rawImg.trim();
+      if (imgUrl.startsWith("/")) {
+        imgUrl = `${domain}${imgUrl}`;
+      }
+      
+      const cleanTitle = (post.title || "").replace(/<[^>]*>/g, "").trim();
+
       xml += `    <image:image>\n`;
       xml += `      <image:loc>${xmlEscape(imgUrl)}</image:loc>\n`;
-      xml += `      <image:title>${xmlEscape(post.title || "")}</image:title>\n`;
+      if (cleanTitle) {
+        xml += `      <image:title>${xmlEscape(cleanTitle)}</image:title>\n`;
+      }
       xml += `    </image:image>\n`;
     }
+
     xml += `  </url>\n`;
   });
 
@@ -1003,8 +1024,10 @@ app.get("/category-sitemap.xml", (req, res) => {
   xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
   categories.forEach((cat: any) => {
+    const catSlug = slugify(String(cat));
+    const catUrl = `${domain}/category/${catSlug}`;
     xml += `  <url>\n`;
-    xml += `    <loc>${domain}/blog?category=${encodeURIComponent(cat)}</loc>\n`;
+    xml += `    <loc>${xmlEscape(catUrl)}</loc>\n`;
     xml += `    <lastmod>${now}</lastmod>\n`;
     xml += `    <changefreq>weekly</changefreq>\n`;
     xml += `    <priority>0.6</priority>\n`;
@@ -1031,7 +1054,9 @@ app.get("/tag-sitemap.xml", (req, res) => {
   const tagsSet = new Set<string>();
   published.forEach((p: any) => {
     if (Array.isArray(p.tags)) {
-      p.tags.forEach((t: string) => tagsSet.add(t));
+      p.tags.forEach((t: string) => {
+        if (t && t.trim()) tagsSet.add(t.trim());
+      });
     }
   });
 
@@ -1039,8 +1064,10 @@ app.get("/tag-sitemap.xml", (req, res) => {
   xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
   Array.from(tagsSet).forEach((tag) => {
+    const tagSlug = slugify(tag);
+    const tagUrl = `${domain}/tag/${tagSlug}`;
     xml += `  <url>\n`;
-    xml += `    <loc>${domain}/blog?tag=${encodeURIComponent(tag)}</loc>\n`;
+    xml += `    <loc>${xmlEscape(tagUrl)}</loc>\n`;
     xml += `    <lastmod>${now}</lastmod>\n`;
     xml += `    <changefreq>weekly</changefreq>\n`;
     xml += `    <priority>0.5</priority>\n`;

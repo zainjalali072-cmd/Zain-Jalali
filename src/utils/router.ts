@@ -1,7 +1,17 @@
 export interface RouteState {
   view: string;
   activePostId: string | null;
+  categorySlug?: string | null;
+  tagSlug?: string | null;
   isWpAdmin: boolean;
+}
+
+export function slugify(text: string): string {
+  return String(text || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 export function parseCurrentRoute(): RouteState {
@@ -53,6 +63,16 @@ export function parseCurrentRoute(): RouteState {
 
   if (pathname === "/blog") {
     return { view: "blog", activePostId: null, isWpAdmin: false };
+  }
+
+  if (pathname.startsWith("/category/") || pathname.startsWith("/blog/category/")) {
+    const rawCat = pathname.replace(/^\/(blog\/)?category\//, "").replace(/\/$/, "");
+    return { view: "blog", activePostId: null, categorySlug: decodeURIComponent(rawCat), isWpAdmin: false };
+  }
+
+  if (pathname.startsWith("/tag/") || pathname.startsWith("/blog/tag/")) {
+    const rawTag = pathname.replace(/^\/(blog\/)?tag\//, "").replace(/\/$/, "");
+    return { view: "blog", activePostId: null, tagSlug: decodeURIComponent(rawTag), isWpAdmin: false };
   }
 
   if (pathname.startsWith("/blog/")) {

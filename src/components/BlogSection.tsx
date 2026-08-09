@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { blogPostsData } from "../data";
 import { getCMSData, DEFAULT_POST_IMAGE, cleanHTMLToExcerpt, ensureBlogPostSEO, BlogPost } from "../cmsStore";
+import { parseCurrentRoute, slugify } from "../utils/router";
 
 interface BlogSectionProps {
   currentView: string;
@@ -189,6 +190,17 @@ export default function BlogSection({
   });
 
   const categories = ["All", ...Array.from(new Set(allPosts.map(p => p.category).filter(Boolean)))];
+
+  useEffect(() => {
+    const route = parseCurrentRoute();
+    if (route.categorySlug) {
+      const targetSlug = route.categorySlug.toLowerCase();
+      const match = categories.find(c => slugify(String(c)) === targetSlug);
+      if (match) {
+        setSelectedCategory(match);
+      }
+    }
+  }, []);
 
   // Handle post clicks
   const handlePostClick = (postId: string) => {
