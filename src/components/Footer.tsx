@@ -58,48 +58,56 @@ export default function Footer({ setView, onNavigate }: FooterProps) {
             {/* Social Icons with Colorful Badges */}
             <div className="flex items-center space-x-3 pt-2">
               {/* Facebook */}
-              <a
-                href={cms.facebookLink || academyContact.facebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full border border-[#1877F2]/40 bg-[#1877F2]/15 flex items-center justify-center text-[#4285F4] hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] shadow-[0_0_12px_rgba(24,119,242,0.2)] hover:shadow-[0_0_20px_rgba(24,119,242,0.6)] hover:-translate-y-0.5 transition-all duration-300"
-                aria-label="Facebook Profile"
-              >
-                <Facebook size={18} />
-              </a>
+              {(cms.facebookLink || academyContact.facebook) && (
+                <a
+                  href={cms.facebookLink || academyContact.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full border border-[#1877F2]/40 bg-[#1877F2]/15 flex items-center justify-center text-[#4285F4] hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] shadow-[0_0_12px_rgba(24,119,242,0.2)] hover:shadow-[0_0_20px_rgba(24,119,242,0.6)] hover:-translate-y-0.5 transition-all duration-300"
+                  aria-label="Facebook Profile"
+                >
+                  <Facebook size={18} />
+                </a>
+              )}
 
               {/* Instagram */}
-              <a
-                href={cms.instagramLink || academyContact.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full border border-[#E4405F]/40 bg-[#E4405F]/15 flex items-center justify-center text-[#f43f5e] hover:bg-gradient-to-tr hover:from-[#f87171] hover:via-[#e11d48] hover:to-[#a855f7] hover:text-white hover:border-[#E4405F] shadow-[0_0_12px_rgba(228,64,95,0.2)] hover:shadow-[0_0_20px_rgba(228,64,95,0.6)] hover:-translate-y-0.5 transition-all duration-300"
-                aria-label="Instagram Profile"
-              >
-                <Instagram size={18} />
-              </a>
+              {(cms.instagramLink || academyContact.instagram) && (
+                <a
+                  href={cms.instagramLink || academyContact.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full border border-[#E4405F]/40 bg-[#E4405F]/15 flex items-center justify-center text-[#f43f5e] hover:bg-gradient-to-tr hover:from-[#f87171] hover:via-[#e11d48] hover:to-[#a855f7] hover:text-white hover:border-[#E4405F] shadow-[0_0_12px_rgba(228,64,95,0.2)] hover:shadow-[0_0_20px_rgba(228,64,95,0.6)] hover:-translate-y-0.5 transition-all duration-300"
+                  aria-label="Instagram Profile"
+                >
+                  <Instagram size={18} />
+                </a>
+              )}
 
               {/* LinkedIn */}
-              <a
-                href={cms.linkedinLink || academyContact.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full border border-[#0A66C2]/40 bg-[#0A66C2]/15 flex items-center justify-center text-[#38bdf8] hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2] shadow-[0_0_12px_rgba(10,102,194,0.2)] hover:shadow-[0_0_20px_rgba(10,102,194,0.6)] hover:-translate-y-0.5 transition-all duration-300"
-                aria-label="LinkedIn Profile"
-              >
-                <Linkedin size={18} />
-              </a>
+              {(cms.linkedinLink || academyContact.linkedin) && (
+                <a
+                  href={cms.linkedinLink || academyContact.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full border border-[#0A66C2]/40 bg-[#0A66C2]/15 flex items-center justify-center text-[#38bdf8] hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2] shadow-[0_0_12px_rgba(10,102,194,0.2)] hover:shadow-[0_0_20px_rgba(10,102,194,0.6)] hover:-translate-y-0.5 transition-all duration-300"
+                  aria-label="LinkedIn Profile"
+                >
+                  <Linkedin size={18} />
+                </a>
+              )}
 
               {/* WhatsApp */}
-              <a
-                href={`${cms.whatsappLink || academyContact.whatsapp}?text=Salam%20Truth%20Quran%20Academy.`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full border border-[#25D366]/40 bg-[#25D366]/15 flex items-center justify-center text-[#4ade80] hover:bg-[#25D366] hover:text-white hover:border-[#25D366] shadow-[0_0_12px_rgba(37,211,102,0.2)] hover:shadow-[0_0_20px_rgba(37,211,102,0.6)] hover:-translate-y-0.5 transition-all duration-300"
-                aria-label="WhatsApp Support"
-              >
-                <WhatsAppIcon size={18} />
-              </a>
+              {(cms.whatsappLink || academyContact.whatsapp) && (
+                <a
+                  href={`${cms.whatsappLink || academyContact.whatsapp}?text=Salam%20Truth%20Quran%20Academy.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full border border-[#25D366]/40 bg-[#25D366]/15 flex items-center justify-center text-[#4ade80] hover:bg-[#25D366] hover:text-white hover:border-[#25D366] shadow-[0_0_12px_rgba(37,211,102,0.2)] hover:shadow-[0_0_20px_rgba(37,211,102,0.6)] hover:-translate-y-0.5 transition-all duration-300"
+                  aria-label="WhatsApp Support"
+                >
+                  <WhatsAppIcon size={18} />
+                </a>
+              )}
             </div>
           </div>
 

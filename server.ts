@@ -132,8 +132,9 @@ const getDatabase = () => {
       contactEmail: "muhammadzain92624@gmail.com",
       contactAddress: "Altaf Colony, Ranjar Head Quarter, Lahore Cantt, Pakistan",
       whatsappLink: "https://wa.me/923219347471",
-      facebookLink: "https://facebook.com/truthquranacademy",
-      instagramLink: "https://instagram.com/truthquranacademy",
+      facebookLink: "https://www.facebook.com/truthquran?mibextid=ZbWKwL",
+      instagramLink: "https://www.instagram.com/truth_quran_786?igsh=MTM1MmFvc3dtMHFhMQ==",
+      linkedinLink: "https://www.linkedin.com/in/truth-quran-online-quran-academy-65688b423?utm_source=share_via&utm_content=profile&utm_medium=member_android",
       courses: DEFAULT_COURSES,
       whyUs: [
         { id: "why-1", title: "1-on-1 Private Attention", description: "Every student receives custom focused lessons tailored specifically to their learning speed and mental retention.", icon: "CheckCircle" }

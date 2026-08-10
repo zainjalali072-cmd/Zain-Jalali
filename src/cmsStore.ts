@@ -741,6 +741,15 @@ export const getCMSData = (): CMSData => {
       if (parsed.contactAddress && parsed.contactAddress.includes("Rawalpindi")) {
         parsed.contactAddress = "Altaf Colony, Ranjar Head Quarter, Lahore Cantt, Pakistan";
       }
+      if (!parsed.facebookLink || parsed.facebookLink.includes("truthquranacademy")) {
+        parsed.facebookLink = academyContact.facebook;
+      }
+      if (!parsed.instagramLink || parsed.instagramLink.includes("truthquranacademy")) {
+        parsed.instagramLink = academyContact.instagram;
+      }
+      if (!parsed.linkedinLink || parsed.linkedinLink.includes("truthquranacademy")) {
+        parsed.linkedinLink = academyContact.linkedin;
+      }
 
       return parsed;
     } catch (e) {

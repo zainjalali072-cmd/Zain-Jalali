@@ -9,9 +9,13 @@ import {
   User, 
   Globe, 
   GraduationCap, 
-  Calendar 
+  Calendar,
+  Facebook,
+  Instagram,
+  Linkedin
 } from "lucide-react";
 import WhatsAppIcon from "./WhatsAppIcon";
+import { academyContact } from "../data";
 import { getCMSData, saveCMSData } from "../cmsStore";
 
 export default function ContactForm() {
@@ -167,16 +171,58 @@ export default function ContactForm() {
         </div>
 
         {/* Big WhatsApp CTA Button with Green Gradient Pulse */}
-        <div className="pt-2">
+        <div className="pt-2 space-y-3">
           <a
             href={`${cms.whatsappLink || "https://wa.me/+923219347471"}?text=Salam!%20I%20have%20a%20question%20regarding%20Truth%20Quran%20Academy.`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full inline-flex items-center justify-center space-x-3 px-6 py-4.5 rounded-full bg-[#1fae5b]/10 border-2 border-[#1fae5b]/30 text-xs md:text-sm font-sans font-extrabold uppercase tracking-wider text-[#5fe396] hover:bg-[#1fae5b] hover:text-white hover:-translate-y-1 hover:shadow-[0_12px_35px_rgba(31,174,91,0.45)] transition-all duration-300"
+            className="w-full inline-flex items-center justify-center space-x-3 px-6 py-4 rounded-full bg-[#1fae5b]/10 border-2 border-[#1fae5b]/30 text-xs md:text-sm font-sans font-extrabold uppercase tracking-wider text-[#5fe396] hover:bg-[#1fae5b] hover:text-white hover:-translate-y-1 hover:shadow-[0_12px_35px_rgba(31,174,91,0.45)] transition-all duration-300"
           >
             <WhatsAppIcon size={18} />
             <span>Chat Securely on WhatsApp Now</span>
           </a>
+
+          {/* Social Media Accounts Bar */}
+          <div className="p-4 rounded-2xl bg-[#12141b]/65 border border-[#d9b45c]/15 flex items-center justify-between flex-wrap gap-3">
+            <span className="text-[10px] font-sans font-bold text-[#d9b45c] uppercase tracking-wider">
+              Official Social Profiles
+            </span>
+            <div className="flex items-center space-x-2.5">
+              {(cms.facebookLink || academyContact.facebook) && (
+                <a
+                  href={cms.facebookLink || academyContact.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-full border border-[#1877F2]/40 bg-[#1877F2]/15 flex items-center justify-center text-[#4285F4] hover:bg-[#1877F2] hover:text-white transition-colors"
+                  aria-label="Facebook Profile"
+                >
+                  <Facebook size={15} />
+                </a>
+              )}
+              {(cms.instagramLink || academyContact.instagram) && (
+                <a
+                  href={cms.instagramLink || academyContact.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-full border border-[#E4405F]/40 bg-[#E4405F]/15 flex items-center justify-center text-[#f43f5e] hover:bg-[#E4405F] hover:text-white transition-colors"
+                  aria-label="Instagram Profile"
+                >
+                  <Instagram size={15} />
+                </a>
+              )}
+              {(cms.linkedinLink || academyContact.linkedin) && (
+                <a
+                  href={cms.linkedinLink || academyContact.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-full border border-[#0A66C2]/40 bg-[#0A66C2]/15 flex items-center justify-center text-[#38bdf8] hover:bg-[#0A66C2] hover:text-white transition-colors"
+                  aria-label="LinkedIn Profile"
+                >
+                  <Linkedin size={15} />
+                </a>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

@@ -828,6 +828,42 @@ export default function WPSimulator({ onClose }: WPSimulatorProps) {
                               />
                             </div>
                           </div>
+
+                          <div className="col-span-1 md:col-span-2 pt-4 border-t border-[#d9b45c]/10 space-y-3">
+                            <span className="text-[10px] text-[#d9b45c] uppercase font-bold tracking-widest block">Official Social Media Profile Links</span>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              <div className="space-y-1">
+                                <label className="text-[10px] text-[#c9c2ab] uppercase font-bold tracking-wider">Facebook Profile URL</label>
+                                <input 
+                                  type="text" 
+                                  value={cmsData.facebookLink || ""}
+                                  onChange={(e) => updateCustomizerField("facebookLink", e.target.value)}
+                                  placeholder="https://facebook.com/yourpage"
+                                  className="w-full bg-[#07080b] border border-[#d9b45c]/20 rounded-lg p-2 text-xs text-white"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] text-[#c9c2ab] uppercase font-bold tracking-wider">Instagram Profile URL</label>
+                                <input 
+                                  type="text" 
+                                  value={cmsData.instagramLink || ""}
+                                  onChange={(e) => updateCustomizerField("instagramLink", e.target.value)}
+                                  placeholder="https://instagram.com/yourhandle"
+                                  className="w-full bg-[#07080b] border border-[#d9b45c]/20 rounded-lg p-2 text-xs text-white"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] text-[#c9c2ab] uppercase font-bold tracking-wider">LinkedIn Profile URL</label>
+                                <input 
+                                  type="text" 
+                                  value={cmsData.linkedinLink || ""}
+                                  onChange={(e) => updateCustomizerField("linkedinLink", e.target.value)}
+                                  placeholder="https://linkedin.com/in/yourprofile"
+                                  className="w-full bg-[#07080b] border border-[#d9b45c]/20 rounded-lg p-2 text-xs text-white"
+                                />
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}

@@ -104,7 +104,12 @@ export default function SEOHead({ cmsData, currentView, activePostId }: SEOHeadP
           "streetAddress": cmsData.contactAddress || "Altaf Colony, Ranjar Head Quarter, Lahore Cantt, Pakistan",
           "addressLocality": "Lahore",
           "addressCountry": "PK"
-        }
+        },
+        "sameAs": [
+          cmsData.facebookLink || "https://www.facebook.com/truthquran?mibextid=ZbWKwL",
+          cmsData.instagramLink || "https://www.instagram.com/truth_quran_786?igsh=MTM1MmFvc3dtMHFhMQ==",
+          cmsData.linkedinLink || "https://www.linkedin.com/in/truth-quran-online-quran-academy-65688b423?utm_source=share_via&utm_content=profile&utm_medium=member_android"
+        ].filter(Boolean)
       };
     }
 

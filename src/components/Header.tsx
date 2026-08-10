@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Menu, X, MessageCircle, ChevronDown } from "lucide-react";
+import { Menu, X, MessageCircle, ChevronDown, Facebook, Instagram, Linkedin } from "lucide-react";
+import WhatsAppIcon from "./WhatsAppIcon";
 import { academyContact } from "../data";
 import logoImg from "../assets/images/truth_quran_new_logo_1784203145448.jpg";
 import { getCMSData } from "../cmsStore";
@@ -252,6 +253,54 @@ export default function Header({ currentView, setView, onNavigate }: HeaderProps
               >
                 Enquire
               </button>
+
+              {/* Social Media Links */}
+              <div className="flex items-center justify-center space-x-3 pt-3 border-t border-[#d9b45c]/10">
+                {(cms.facebookLink || academyContact.facebook) && (
+                  <a
+                    href={cms.facebookLink || academyContact.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-full border border-[#1877F2]/40 bg-[#1877F2]/15 flex items-center justify-center text-[#4285F4] hover:bg-[#1877F2] hover:text-white transition-colors"
+                    aria-label="Facebook Profile"
+                  >
+                    <Facebook size={16} />
+                  </a>
+                )}
+                {(cms.instagramLink || academyContact.instagram) && (
+                  <a
+                    href={cms.instagramLink || academyContact.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-full border border-[#E4405F]/40 bg-[#E4405F]/15 flex items-center justify-center text-[#f43f5e] hover:bg-[#E4405F] hover:text-white transition-colors"
+                    aria-label="Instagram Profile"
+                  >
+                    <Instagram size={16} />
+                  </a>
+                )}
+                {(cms.linkedinLink || academyContact.linkedin) && (
+                  <a
+                    href={cms.linkedinLink || academyContact.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-full border border-[#0A66C2]/40 bg-[#0A66C2]/15 flex items-center justify-center text-[#38bdf8] hover:bg-[#0A66C2] hover:text-white transition-colors"
+                    aria-label="LinkedIn Profile"
+                  >
+                    <Linkedin size={16} />
+                  </a>
+                )}
+                {(cms.whatsappLink || academyContact.whatsapp) && (
+                  <a
+                    href={`${cms.whatsappLink || academyContact.whatsapp}?text=Salam%20Truth%20Quran%20Academy.`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-full border border-[#25D366]/40 bg-[#25D366]/15 flex items-center justify-center text-[#4ade80] hover:bg-[#25D366] hover:text-white transition-colors"
+                    aria-label="WhatsApp Support"
+                  >
+                    <WhatsAppIcon size={16} />
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>
