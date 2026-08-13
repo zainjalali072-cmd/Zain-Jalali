@@ -42,21 +42,21 @@ import AutoOpeningQuran from "./components/AutoOpeningQuran";
 import SEOHead from "./components/SEOHead";
 import { getCMSData, fetchCMSDataFromServer } from "./cmsStore";
 
-const FAQAccordion = React.lazy(() => import("./components/FAQAccordion"));
-const ContactForm = React.lazy(() => import("./components/ContactForm"));
-const MapSection = React.lazy(() => import("./components/MapSection"));
-const BlogSection = React.lazy(() => import("./components/BlogSection"));
-const WhatsAppModal = React.lazy(() => import("./components/WhatsAppModal"));
-const WPSimulator = React.lazy(() => import("./components/WPSimulator"));
+import FAQAccordion from "./components/FAQAccordion";
+import ContactForm from "./components/ContactForm";
+import MapSection from "./components/MapSection";
+import BlogSection from "./components/BlogSection";
+import WhatsAppModal from "./components/WhatsAppModal";
+import AboutPage from "./components/AboutPage";
+import CoursesPage from "./components/CoursesPage";
+import NooraniQaidaPage from "./components/NooraniQaidaPage";
+import KidsClassesPage from "./components/KidsClassesPage";
+import FeesPage from "./components/FeesPage";
+import VideosPage from "./components/VideosPage";
+import ContactPage from "./components/ContactPage";
+import DownloadPage from "./components/DownloadPage";
 
-const AboutPage = React.lazy(() => import("./components/AboutPage"));
-const CoursesPage = React.lazy(() => import("./components/CoursesPage"));
-const NooraniQaidaPage = React.lazy(() => import("./components/NooraniQaidaPage"));
-const KidsClassesPage = React.lazy(() => import("./components/KidsClassesPage"));
-const FeesPage = React.lazy(() => import("./components/FeesPage"));
-const VideosPage = React.lazy(() => import("./components/VideosPage"));
-const ContactPage = React.lazy(() => import("./components/ContactPage"));
-const DownloadPage = React.lazy(() => import("./components/DownloadPage"));
+const WPSimulator = React.lazy(() => import("./components/WPSimulator"));
 
 // Throttled custom count-up component to prevent main-thread re-render thrashing
 function CountUpNumber({ end, suffix = "", duration = 1600 }: { end: number; suffix?: string; duration?: number }) {
@@ -913,14 +913,12 @@ export default function App() {
                 </div>
 
                 {/* Interactive Blog Component (handles category filtering & navigation) */}
-                <React.Suspense fallback={<div className="h-64 flex items-center justify-center text-[#d9b45c]"><div className="w-8 h-8 rounded-full border-2 border-[#d9b45c] border-t-transparent animate-spin" /></div>}>
-                  <BlogSection
-                    currentView={currentView}
-                    setView={setView}
-                    activePostId={activePostId}
-                    setActivePostId={setActivePostId}
-                  />
-                </React.Suspense>
+                <BlogSection
+                  currentView={currentView}
+                  setView={setView}
+                  activePostId={activePostId}
+                  setActivePostId={setActivePostId}
+                />
 
               </div>
             </section>
@@ -945,9 +943,7 @@ export default function App() {
                 </div>
 
                 {/* Interactive single-open accordion */}
-                <React.Suspense fallback={<div className="h-48 flex items-center justify-center text-[#d9b45c]"><div className="w-6 h-6 rounded-full border-2 border-[#d9b45c] border-t-transparent animate-spin" /></div>}>
-                  <FAQAccordion />
-                </React.Suspense>
+                <FAQAccordion />
 
               </div>
             </section>
@@ -997,62 +993,56 @@ export default function App() {
             {/* CONTACT SECTION (Two Column) */}
             {cms.sectionsVisibility?.contact !== false && (
             <section id="contact" className="py-20 md:py-28 max-w-7xl mx-auto px-6">
-              <React.Suspense fallback={<div className="h-64 flex items-center justify-center text-[#d9b45c]"><div className="w-8 h-8 rounded-full border-2 border-[#d9b45c] border-t-transparent animate-spin" /></div>}>
-                <ContactForm />
-              </React.Suspense>
+              <ContactForm />
             </section>
             )}
 
             {/* GOOGLE MAP LOCATION SECTION */}
             {cms.sectionsVisibility?.map !== false && (
-              <React.Suspense fallback={null}>
-                <MapSection />
-              </React.Suspense>
+              <MapSection />
             )}
           </>
         )}
 
-        <React.Suspense fallback={<div className="min-h-[400px] flex items-center justify-center text-[#d9b45c]"><div className="w-8 h-8 rounded-full border-2 border-[#d9b45c] border-t-transparent animate-spin" /></div>}>
-          {currentView === "about" && <AboutPage setView={setView} />}
-          {currentView === "courses" && <CoursesPage />}
-          {currentView === "noorani-qaida" && <NooraniQaidaPage />}
-          {currentView === "kids-classes" && <KidsClassesPage />}
-          {currentView === "fees" && <FeesPage />}
-          {currentView === "download" && <DownloadPage setView={setView} />}
-          {currentView === "videos" && <VideosPage />}
-          {currentView === "blog" && (
-            <div className="max-w-7xl mx-auto px-6 py-12 text-left space-y-12">
-              <div className="text-center max-w-2xl mx-auto space-y-3">
-                <span className="text-[12px] font-sans uppercase font-bold tracking-[0.22em] text-[#d9b45c] bg-[#d9b45c]/8 border border-[#d9b45c]/15 px-3 py-1 rounded-full">
-                  Education & Insights
-                </span>
-                <h2 className="font-serif text-3xl md:text-4xl text-[#f3ecd8] font-medium tracking-tight">
-                  The Academy <span className="text-[#d9b45c] italic font-normal">Insights Blog</span>
-                </h2>
-                <p className="text-xs md:text-sm text-[#c9c2ab] leading-relaxed">
-                  Read professional guide articles on Tajweed mechanics, traditional Hifz strategies, and classical Arabic linguistic studies.
-                </p>
-              </div>
-              <BlogSection
-                currentView={currentView}
-                setView={setView}
-                activePostId={activePostId}
-                setActivePostId={setActivePostId}
-              />
+        {currentView === "about" && <AboutPage setView={setView} />}
+        {(currentView === "courses" || currentView === "services") && <CoursesPage />}
+        {currentView === "noorani-qaida" && <NooraniQaidaPage />}
+        {currentView === "kids-classes" && <KidsClassesPage />}
+        {currentView === "fees" && <FeesPage />}
+        {currentView === "download" && <DownloadPage setView={setView} />}
+        {currentView === "videos" && <VideosPage />}
+        {currentView === "blog" && (
+          <div className="max-w-7xl mx-auto px-6 py-12 text-left space-y-12">
+            <div className="text-center max-w-2xl mx-auto space-y-3">
+              <span className="text-[12px] font-sans uppercase font-bold tracking-[0.22em] text-[#d9b45c] bg-[#d9b45c]/8 border border-[#d9b45c]/15 px-3 py-1 rounded-full">
+                Education & Insights
+              </span>
+              <h2 className="font-serif text-3xl md:text-4xl text-[#f3ecd8] font-medium tracking-tight">
+                The Academy <span className="text-[#d9b45c] italic font-normal">Insights Blog</span>
+              </h2>
+              <p className="text-xs md:text-sm text-[#c9c2ab] leading-relaxed">
+                Read professional guide articles on Tajweed mechanics, traditional Hifz strategies, and classical Arabic linguistic studies.
+              </p>
             </div>
-          )}
-          {currentView === "contact" && <ContactPage />}
-          {currentView === "blog-post" && (
-            <div className="py-12 bg-[#07080b]">
-              <BlogSection
-                currentView={currentView}
-                setView={setView}
-                activePostId={activePostId}
-                setActivePostId={setActivePostId}
-              />
-            </div>
-          )}
-        </React.Suspense>
+            <BlogSection
+              currentView={currentView}
+              setView={setView}
+              activePostId={activePostId}
+              setActivePostId={setActivePostId}
+            />
+          </div>
+        )}
+        {currentView === "contact" && <ContactPage />}
+        {currentView === "blog-post" && (
+          <div className="py-12 bg-[#07080b]">
+            <BlogSection
+              currentView={currentView}
+              setView={setView}
+              activePostId={activePostId}
+              setActivePostId={setActivePostId}
+            />
+          </div>
+        )}
 
       </main>
 
@@ -1062,12 +1052,9 @@ export default function App() {
         onNavigate={handleScrollToSection} 
       />
 
-
-
        {/* 16. Floating WhatsApp Pulse Button & Modal */}
-       <React.Suspense fallback={null}>
-         <WhatsAppModal />
-       </React.Suspense>
+       <WhatsAppModal />
+
  
      </div>
    );
