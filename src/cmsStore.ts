@@ -11,6 +11,10 @@ import parentKidsQuranBg from "./assets/images/parent_kids_quran_1784121554278.j
 import islamicKidsLearningBg from "./assets/images/islamic_kids_learning_1784120227940.jpg";
 import islamicGirlQaidaBg from "./assets/images/islamic_girl_qaida_1784120204322.jpg";
 import quran3DIconImg from "./assets/images/holy_quran_icon_1784372106996.jpg";
+import sheikhAbdulRahmanImg from "./assets/images/sheikh_abdul_rahman_1784121404292.jpg";
+import ustadhHafizZainImg from "./assets/images/ustadh_hafiz_zain_1784121424995.jpg";
+import ustadhaMaryamImg from "./assets/images/female_quran_tutor_1784119152017.jpg";
+import photorealisticOpenQuranImg from "./assets/images/photorealistic_open_quran_1784123735832.jpg";
 
 export interface SEOConfig {
   metaTitle: string;
@@ -280,7 +284,7 @@ export const DEFAULT_TEACHERS: WPTeacher[] = [
     name: "Sheikh Abdul Rahman",
     role: "Head of Quranic Studies",
     bio: "Graduated from Jamia Naeemia Lahore with a master's in Islamic theology and Quranic sciences. Holds high-ranking Ijazah in the ten qira'at of the Quran with Sanad linked to the Prophet (PBUH).",
-    photo: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=300",
+    photo: sheikhAbdulRahmanImg,
     rating: 5,
     experience: "15+ Years",
     status: "published",
@@ -297,7 +301,7 @@ export const DEFAULT_TEACHERS: WPTeacher[] = [
     name: "Ustadh Hafiz Zain",
     role: "Senior Hifz Instructor",
     bio: "Huffadh instructor certified from leading Quranic centres. Specialized in tutoring young children and adults, utilizing modern memory pathways to ensure rapid and secure retention.",
-    photo: "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&q=80&w=300",
+    photo: ustadhHafizZainImg,
     rating: 5,
     experience: "8 Years",
     status: "published",
@@ -314,7 +318,7 @@ export const DEFAULT_TEACHERS: WPTeacher[] = [
     name: "Ustadha Maryam",
     role: "Female Tajweed Specialist",
     bio: "Graduated with classical honors in Tajweed and Arabic studies. Over 10 years teaching sisters and young kids global phonetics, Makharij articulation points, and beautiful Salah modulation.",
-    photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300",
+    photo: ustadhaMaryamImg,
     rating: 5,
     experience: "10 Years",
     status: "published",
@@ -730,9 +734,48 @@ export const getCMSData = (): CMSData => {
         });
       }
 
+      // Ensure customImages is always present and merged with default local assets
+      parsed.customImages = {
+        ...DEFAULT_CUSTOM_IMAGES,
+        ...(parsed.customImages || {})
+      };
+
+      // Ensure teachers list uses local images if missing or unsplash placeholder
+      if (!parsed.teachers || parsed.teachers.length === 0) {
+        parsed.teachers = DEFAULT_TEACHERS;
+      } else {
+        parsed.teachers = parsed.teachers.map((t: WPTeacher) => {
+          let photo = t.photo;
+          if (!photo || photo.includes("unsplash.com")) {
+            if (t.id === "teacher-1" || t.name?.includes("Sheikh") || t.name?.includes("Abdul")) {
+              photo = sheikhAbdulRahmanImg;
+            } else if (t.id === "teacher-2" || t.name?.includes("Zain")) {
+              photo = ustadhHafizZainImg;
+            } else if (t.id === "teacher-3" || t.name?.includes("Maryam")) {
+              photo = ustadhaMaryamImg;
+            } else {
+              photo = teacherBg;
+            }
+          }
+          return { ...t, photo };
+        });
+      }
+
+      // Ensure media library has defaults
+      if (!parsed.mediaLibrary || parsed.mediaLibrary.length === 0) {
+        parsed.mediaLibrary = DEFAULT_MEDIA;
+      }
+
+      // Ensure developer avatar uses local asset
+      if (!parsed.developerAvatar || parsed.developerAvatar.includes("unsplash.com")) {
+        parsed.developerAvatar = academyContact.developerAvatar;
+      }
+
       // map blog posts to have advanced SEO fields populated
-      if (parsed.blogPosts) {
+      if (parsed.blogPosts && parsed.blogPosts.length > 0) {
         parsed.blogPosts = parsed.blogPosts.map(ensureBlogPostSEO);
+      } else {
+        parsed.blogPosts = blogPostsData.map(ensureBlogPostSEO);
       }
 
       if (parsed.contactEmail === "zainjalali072@gmail.com") {

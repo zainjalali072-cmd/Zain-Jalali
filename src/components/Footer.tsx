@@ -43,6 +43,9 @@ export default function Footer({ setView, onNavigate }: FooterProps) {
                   width={48}
                   height={48}
                   loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.src = logoImg;
+                  }}
                   className="w-full h-full object-contain" 
                 />
               </div>

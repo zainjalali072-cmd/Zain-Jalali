@@ -84,6 +84,9 @@ export default function Header({ currentView, setView, onNavigate }: HeaderProps
               width={48}
               height={48}
               loading="eager"
+              onError={(e) => {
+                e.currentTarget.src = logoImg;
+              }}
               className="w-full h-full object-contain" 
             />
           </div>
