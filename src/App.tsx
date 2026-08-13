@@ -30,7 +30,6 @@ import {
 
 import Header from "./components/Header";
 import Starfield from "./components/Starfield";
-import WhatsAppModal from "./components/WhatsAppModal";
 import logoImg from "./assets/images/truth_quran_new_logo_1784203145448.jpg";
 import kidsLearningBg from "./assets/images/kids_quran_learning_1784116863937.jpg";
 import teacherBg from "./assets/images/online_quran_teacher_1784116886285.jpg";
@@ -38,16 +37,17 @@ import femaleTeacherBg from "./assets/images/female_quran_tutor_1784119152017.jp
 import tajweedMasteryBg from "./assets/images/tajweed_mastery_art_1784119171753.jpg";
 import islamicKidsLearningBg from "./assets/images/islamic_kids_learning_1784120227940.jpg";
 import islamicGirlQaidaBg from "./assets/images/islamic_girl_qaida_1784120204322.jpg";
-import FAQAccordion from "./components/FAQAccordion";
-import ContactForm from "./components/ContactForm";
-import MapSection from "./components/MapSection";
-import DeveloperCard from "./components/DeveloperCard";
 import Footer from "./components/Footer";
 import AutoOpeningQuran from "./components/AutoOpeningQuran";
-import BlogSection from "./components/BlogSection";
 import SEOHead from "./components/SEOHead";
 import { getCMSData, fetchCMSDataFromServer } from "./cmsStore";
 
+const FAQAccordion = React.lazy(() => import("./components/FAQAccordion"));
+const ContactForm = React.lazy(() => import("./components/ContactForm"));
+const MapSection = React.lazy(() => import("./components/MapSection"));
+const DeveloperCard = React.lazy(() => import("./components/DeveloperCard"));
+const BlogSection = React.lazy(() => import("./components/BlogSection"));
+const WhatsAppModal = React.lazy(() => import("./components/WhatsAppModal"));
 const WPSimulator = React.lazy(() => import("./components/WPSimulator"));
 
 const AboutPage = React.lazy(() => import("./components/AboutPage"));
@@ -914,12 +914,14 @@ export default function App() {
                 </div>
 
                 {/* Interactive Blog Component (handles category filtering & navigation) */}
-                <BlogSection
-                  currentView={currentView}
-                  setView={setView}
-                  activePostId={activePostId}
-                  setActivePostId={setActivePostId}
-                />
+                <React.Suspense fallback={<div className="h-64 flex items-center justify-center text-[#d9b45c]"><div className="w-8 h-8 rounded-full border-2 border-[#d9b45c] border-t-transparent animate-spin" /></div>}>
+                  <BlogSection
+                    currentView={currentView}
+                    setView={setView}
+                    activePostId={activePostId}
+                    setActivePostId={setActivePostId}
+                  />
+                </React.Suspense>
 
               </div>
             </section>
@@ -944,7 +946,9 @@ export default function App() {
                 </div>
 
                 {/* Interactive single-open accordion */}
-                <FAQAccordion />
+                <React.Suspense fallback={<div className="h-48 flex items-center justify-center text-[#d9b45c]"><div className="w-6 h-6 rounded-full border-2 border-[#d9b45c] border-t-transparent animate-spin" /></div>}>
+                  <FAQAccordion />
+                </React.Suspense>
 
               </div>
             </section>
@@ -994,13 +998,17 @@ export default function App() {
             {/* CONTACT SECTION (Two Column) */}
             {cms.sectionsVisibility?.contact !== false && (
             <section id="contact" className="py-20 md:py-28 max-w-7xl mx-auto px-6">
-              <ContactForm />
+              <React.Suspense fallback={<div className="h-64 flex items-center justify-center text-[#d9b45c]"><div className="w-8 h-8 rounded-full border-2 border-[#d9b45c] border-t-transparent animate-spin" /></div>}>
+                <ContactForm />
+              </React.Suspense>
             </section>
             )}
 
             {/* GOOGLE MAP LOCATION SECTION */}
             {cms.sectionsVisibility?.map !== false && (
-              <MapSection />
+              <React.Suspense fallback={null}>
+                <MapSection />
+              </React.Suspense>
             )}
           </>
         )}
@@ -1058,7 +1066,9 @@ export default function App() {
 
 
        {/* 16. Floating WhatsApp Pulse Button & Modal */}
-       <WhatsAppModal />
+       <React.Suspense fallback={null}>
+         <WhatsAppModal />
+       </React.Suspense>
  
      </div>
    );
