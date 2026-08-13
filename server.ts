@@ -1284,7 +1284,11 @@ function injectSeoMetaTags(html: string): string {
 
 // Vite Middleware for dev or serving statics in production
 const startServer = async () => {
-  if (process.env.NODE_ENV !== "production") {
+  const distPath = path.join(process.cwd(), "dist");
+  const hasDist = fs.existsSync(path.join(distPath, "index.html"));
+  const isDev = process.env.NODE_ENV === "development";
+
+  if (isDev && !hasDist) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa"
@@ -1292,11 +1296,12 @@ const startServer = async () => {
 
     app.use(vite.middlewares);
   } else {
-    let distPath = path.join(process.cwd(), "dist");
-    if (!fs.existsSync(distPath) && fs.existsSync(path.join(__dirname, "index.html"))) {
-      distPath = __dirname;
+    process.env.NODE_ENV = "production";
+    let targetDistPath = distPath;
+    if (!fs.existsSync(targetDistPath) && fs.existsSync(path.join(__dirname, "index.html"))) {
+      targetDistPath = __dirname;
     }
-    app.use(express.static(distPath, {
+    app.use(express.static(targetDistPath, {
       maxAge: "1y",
       etag: true,
       setHeaders: (res, filePath) => {
@@ -1309,12 +1314,12 @@ const startServer = async () => {
     }));
     app.get("*", (req, res) => {
       try {
-        const indexPath = path.join(distPath, "index.html");
+        const indexPath = path.join(targetDistPath, "index.html");
         let html = fs.readFileSync(indexPath, "utf-8");
         html = injectSeoMetaTags(html);
         res.status(200).set({ "Content-Type": "text/html" }).end(html);
       } catch {
-        res.sendFile(path.join(distPath, "index.html"));
+        res.sendFile(path.join(targetDistPath, "index.html"));
       }
     });
   }
