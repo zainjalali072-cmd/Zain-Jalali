@@ -60,7 +60,25 @@ export default defineConfig(() => {
       minify: true,
       cssMinify: true,
       sourcemap: false,
-      chunkSizeWarningLimit: 1000
+      chunkSizeWarningLimit: 1200,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+                return 'vendor-react';
+              }
+              if (id.includes('lucide-react')) {
+                return 'vendor-icons';
+              }
+              if (id.includes('motion')) {
+                return 'vendor-motion';
+              }
+              return 'vendor-deps';
+            }
+          }
+        }
+      }
     }
   };
 });
