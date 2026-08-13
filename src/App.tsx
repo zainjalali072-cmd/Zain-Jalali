@@ -45,7 +45,6 @@ import { getCMSData, fetchCMSDataFromServer } from "./cmsStore";
 const FAQAccordion = React.lazy(() => import("./components/FAQAccordion"));
 const ContactForm = React.lazy(() => import("./components/ContactForm"));
 const MapSection = React.lazy(() => import("./components/MapSection"));
-const DeveloperCard = React.lazy(() => import("./components/DeveloperCard"));
 const BlogSection = React.lazy(() => import("./components/BlogSection"));
 const WhatsAppModal = React.lazy(() => import("./components/WhatsAppModal"));
 const WPSimulator = React.lazy(() => import("./components/WPSimulator"));
