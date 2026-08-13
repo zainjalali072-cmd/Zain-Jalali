@@ -81,6 +81,9 @@ export default function Header({ currentView, setView, onNavigate }: HeaderProps
               src={cms.customImages?.siteLogo?.url || logoImg} 
               alt={cms.customImages?.siteLogo?.alt || "Truth Quran Logo"} 
               referrerPolicy="no-referrer"
+              width={48}
+              height={48}
+              loading="eager"
               className="w-full h-full object-contain" 
             />
           </div>

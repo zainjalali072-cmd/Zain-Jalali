@@ -19,10 +19,13 @@ export default function Starfield() {
       initStars();
     };
 
+    let lastTime = 0;
+
     const initStars = () => {
       stars = [];
+      const isMobile = window.innerWidth < 768;
       const density = Math.floor((canvas.width * canvas.height) / 8000); // Responsive density
-      const maxStars = Math.min(density, 150);
+      const maxStars = Math.min(density, isMobile ? 70 : 120);
 
       for (let i = 0; i < maxStars; i++) {
         stars.push({
@@ -35,8 +38,20 @@ export default function Starfield() {
       }
     };
 
-    const drawStars = () => {
+    const drawStars = (time?: number) => {
       if (!ctx || !canvas) return;
+
+      if (document.hidden) {
+        animationFrameId = requestAnimationFrame(drawStars);
+        return;
+      }
+
+      if (time && lastTime && time - lastTime < 33) {
+        animationFrameId = requestAnimationFrame(drawStars);
+        return;
+      }
+      lastTime = time || 0;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       for (let i = 0; i < stars.length; i++) {

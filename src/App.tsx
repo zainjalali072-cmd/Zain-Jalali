@@ -45,34 +45,46 @@ import DeveloperCard from "./components/DeveloperCard";
 import Footer from "./components/Footer";
 import AutoOpeningQuran from "./components/AutoOpeningQuran";
 import BlogSection from "./components/BlogSection";
-import WPSimulator from "./components/WPSimulator";
 import SEOHead from "./components/SEOHead";
 import { getCMSData, fetchCMSDataFromServer } from "./cmsStore";
 
-import AboutPage from "./components/AboutPage";
-import CoursesPage from "./components/CoursesPage";
-import NooraniQaidaPage from "./components/NooraniQaidaPage";
-import KidsClassesPage from "./components/KidsClassesPage";
-import FeesPage from "./components/FeesPage";
-import VideosPage from "./components/VideosPage";
-import ContactPage from "./components/ContactPage";
-import DownloadPage from "./components/DownloadPage";
+const WPSimulator = React.lazy(() => import("./components/WPSimulator"));
 
-// Simple custom count-up component using React state and native frame scheduler
-function CountUpNumber({ end, suffix = "", duration = 2000 }: { end: number; suffix?: string; duration?: number }) {
+const AboutPage = React.lazy(() => import("./components/AboutPage"));
+const CoursesPage = React.lazy(() => import("./components/CoursesPage"));
+const NooraniQaidaPage = React.lazy(() => import("./components/NooraniQaidaPage"));
+const KidsClassesPage = React.lazy(() => import("./components/KidsClassesPage"));
+const FeesPage = React.lazy(() => import("./components/FeesPage"));
+const VideosPage = React.lazy(() => import("./components/VideosPage"));
+const ContactPage = React.lazy(() => import("./components/ContactPage"));
+const DownloadPage = React.lazy(() => import("./components/DownloadPage"));
+
+// Throttled custom count-up component to prevent main-thread re-render thrashing
+function CountUpNumber({ end, suffix = "", duration = 1600 }: { end: number; suffix?: string; duration?: number }) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
     let startTimestamp: number | null = null;
+    let lastUpdate = 0;
+    let frameId: number;
+
     const step = (timestamp: number) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      setCount(Math.floor(progress * end));
+      
+      // Update state at most every 40ms (~25fps) to save CPU/GPU main thread
+      if (timestamp - lastUpdate > 40 || progress === 1) {
+        lastUpdate = timestamp;
+        setCount(Math.floor(progress * end));
+      }
+
       if (progress < 1) {
-        window.requestAnimationFrame(step);
+        frameId = window.requestAnimationFrame(step);
       }
     };
-    window.requestAnimationFrame(step);
+
+    frameId = window.requestAnimationFrame(step);
+    return () => window.cancelAnimationFrame(frameId);
   }, [end, duration]);
 
   return (
@@ -158,13 +170,15 @@ export default function App() {
 
   if (isWpAdmin) {
     return (
-      <WPSimulator 
-        onClose={() => {
-          window.history.pushState(null, "", "/");
-          setIsWpAdmin(false);
-          setView("home");
-        }} 
-      />
+      <React.Suspense fallback={<div className="min-h-screen bg-[#07080b] flex items-center justify-center text-[#d9b45c]"><div className="w-8 h-8 rounded-full border-2 border-[#d9b45c] border-t-transparent animate-spin" /></div>}>
+        <WPSimulator 
+          onClose={() => {
+            window.history.pushState(null, "", "/");
+            setIsWpAdmin(false);
+            setView("home");
+          }} 
+        />
+      </React.Suspense>
     );
   }
 
@@ -991,45 +1005,47 @@ export default function App() {
           </>
         )}
 
-        {currentView === "about" && <AboutPage setView={setView} />}
-        {currentView === "courses" && <CoursesPage />}
-        {currentView === "noorani-qaida" && <NooraniQaidaPage />}
-        {currentView === "kids-classes" && <KidsClassesPage />}
-        {currentView === "fees" && <FeesPage />}
-        {currentView === "download" && <DownloadPage setView={setView} />}
-        {currentView === "videos" && <VideosPage />}
-        {currentView === "blog" && (
-          <div className="max-w-7xl mx-auto px-6 py-12 text-left space-y-12">
-            <div className="text-center max-w-2xl mx-auto space-y-3">
-              <span className="text-[12px] font-sans uppercase font-bold tracking-[0.22em] text-[#d9b45c] bg-[#d9b45c]/8 border border-[#d9b45c]/15 px-3 py-1 rounded-full">
-                Education & Insights
-              </span>
-              <h2 className="font-serif text-3xl md:text-4xl text-[#f3ecd8] font-medium tracking-tight">
-                The Academy <span className="text-[#d9b45c] italic font-normal">Insights Blog</span>
-              </h2>
-              <p className="text-xs md:text-sm text-[#c9c2ab] leading-relaxed">
-                Read professional guide articles on Tajweed mechanics, traditional Hifz strategies, and classical Arabic linguistic studies.
-              </p>
+        <React.Suspense fallback={<div className="min-h-[400px] flex items-center justify-center text-[#d9b45c]"><div className="w-8 h-8 rounded-full border-2 border-[#d9b45c] border-t-transparent animate-spin" /></div>}>
+          {currentView === "about" && <AboutPage setView={setView} />}
+          {currentView === "courses" && <CoursesPage />}
+          {currentView === "noorani-qaida" && <NooraniQaidaPage />}
+          {currentView === "kids-classes" && <KidsClassesPage />}
+          {currentView === "fees" && <FeesPage />}
+          {currentView === "download" && <DownloadPage setView={setView} />}
+          {currentView === "videos" && <VideosPage />}
+          {currentView === "blog" && (
+            <div className="max-w-7xl mx-auto px-6 py-12 text-left space-y-12">
+              <div className="text-center max-w-2xl mx-auto space-y-3">
+                <span className="text-[12px] font-sans uppercase font-bold tracking-[0.22em] text-[#d9b45c] bg-[#d9b45c]/8 border border-[#d9b45c]/15 px-3 py-1 rounded-full">
+                  Education & Insights
+                </span>
+                <h2 className="font-serif text-3xl md:text-4xl text-[#f3ecd8] font-medium tracking-tight">
+                  The Academy <span className="text-[#d9b45c] italic font-normal">Insights Blog</span>
+                </h2>
+                <p className="text-xs md:text-sm text-[#c9c2ab] leading-relaxed">
+                  Read professional guide articles on Tajweed mechanics, traditional Hifz strategies, and classical Arabic linguistic studies.
+                </p>
+              </div>
+              <BlogSection
+                currentView={currentView}
+                setView={setView}
+                activePostId={activePostId}
+                setActivePostId={setActivePostId}
+              />
             </div>
-            <BlogSection
-              currentView={currentView}
-              setView={setView}
-              activePostId={activePostId}
-              setActivePostId={setActivePostId}
-            />
-          </div>
-        )}
-        {currentView === "contact" && <ContactPage />}
-        {currentView === "blog-post" && (
-          <div className="py-12 bg-[#07080b]">
-            <BlogSection
-              currentView={currentView}
-              setView={setView}
-              activePostId={activePostId}
-              setActivePostId={setActivePostId}
-            />
-          </div>
-        )}
+          )}
+          {currentView === "contact" && <ContactPage />}
+          {currentView === "blog-post" && (
+            <div className="py-12 bg-[#07080b]">
+              <BlogSection
+                currentView={currentView}
+                setView={setView}
+                activePostId={activePostId}
+                setActivePostId={setActivePostId}
+              />
+            </div>
+          )}
+        </React.Suspense>
 
       </main>
 

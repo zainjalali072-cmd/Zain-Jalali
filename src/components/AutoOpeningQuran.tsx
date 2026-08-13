@@ -68,6 +68,10 @@ export default function AutoOpeningQuran() {
                 src={quran3DIconImg} 
                 alt="Premium 3D Holy Quran Cover" 
                 referrerPolicy="no-referrer"
+                loading="eager"
+                fetchPriority="high"
+                width={250}
+                height={250}
                 className="absolute inset-0 w-full h-full object-cover scale-[1.05] group-hover:scale-[1.12] transition-transform duration-700 select-none pointer-events-none"
                 style={{ filter: "brightness(112%) contrast(128%)" }}
               />
