@@ -15,13 +15,22 @@ export function slugify(text: string): string {
 }
 
 export function parseCurrentRoute(): RouteState {
-  const pathname = window.location.pathname.replace(/\/$/, "") || "/";
+  let pathname = "/";
+  try {
+    pathname = (window.location.pathname || "/").replace(/\/$/, "") || "/";
+  } catch {
+    pathname = "/";
+  }
 
-  if (pathname === "/wp-admin" || pathname.startsWith("/wp-admin")) {
+  // Only open wp-admin if explicitly requested via path /wp-admin or query param ?admin=true
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const hasAdminQuery = searchParams?.get("admin") === "true";
+
+  if (pathname === "/wp-admin" || pathname.startsWith("/wp-admin") || hasAdminQuery) {
     return { view: "home", activePostId: null, isWpAdmin: true };
   }
 
-  if (pathname === "/" || pathname === "") {
+  if (pathname === "/" || pathname === "" || pathname === "/home" || pathname === "/index.html") {
     return { view: "home", activePostId: null, isWpAdmin: false };
   }
 
@@ -81,8 +90,13 @@ export function parseCurrentRoute(): RouteState {
     return { view: "blog-post", activePostId: slug, isWpAdmin: false };
   }
 
-  const fallbackView = pathname.replace("/", "");
-  return { view: fallbackView, activePostId: null, isWpAdmin: false };
+  const validViews = ["about", "services", "contact", "courses", "noorani-qaida", "kids-classes", "fees", "videos", "download", "blog", "blog-post"];
+  const cleanPath = pathname.replace(/^\/+/, "");
+  if (validViews.includes(cleanPath)) {
+    return { view: cleanPath, activePostId: null, isWpAdmin: false };
+  }
+
+  return { view: "home", activePostId: null, isWpAdmin: false };
 }
 
 export function navigateToRoute(view: string, activePostId?: string | null) {

@@ -3,7 +3,22 @@ import compression from "compression";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
+import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
+
+const getAppDir = (): string => {
+  if (typeof __dirname !== "undefined") {
+    return __dirname;
+  }
+  if (typeof import.meta !== "undefined" && import.meta?.url) {
+    try {
+      return path.dirname(fileURLToPath(import.meta.url));
+    } catch {
+      // ignore
+    }
+  }
+  return process.cwd();
+};
 
 const app = express();
 app.use(compression());
@@ -1285,10 +1300,8 @@ function injectSeoMetaTags(html: string): string {
 // Vite Middleware for dev or serving statics in production
 const startServer = async () => {
   const distPath = path.join(process.cwd(), "dist");
-  const hasDist = fs.existsSync(path.join(distPath, "index.html"));
-  const isDev = process.env.NODE_ENV === "development";
 
-  if (isDev && !hasDist) {
+  if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa"
@@ -1296,10 +1309,9 @@ const startServer = async () => {
 
     app.use(vite.middlewares);
   } else {
-    process.env.NODE_ENV = "production";
     let targetDistPath = distPath;
-    if (!fs.existsSync(targetDistPath) && fs.existsSync(path.join(__dirname, "index.html"))) {
-      targetDistPath = __dirname;
+    if (!fs.existsSync(targetDistPath) && fs.existsSync(path.join(getAppDir(), "index.html"))) {
+      targetDistPath = getAppDir();
     }
     app.use(express.static(targetDistPath, {
       maxAge: "1y",

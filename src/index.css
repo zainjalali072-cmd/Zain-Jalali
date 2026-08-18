@@ -70,7 +70,60 @@ body {
   }
 }
 
+@keyframes kenburns {
+  0% {
+    transform: scale(1) translate(0%, 0%);
+  }
+  25% {
+    transform: scale(1.04) translate(-0.8%, 0.5%);
+  }
+  50% {
+    transform: scale(1.08) translate(0.6%, -0.8%);
+  }
+  75% {
+    transform: scale(1.04) translate(0.8%, 0.6%);
+  }
+  100% {
+    transform: scale(1) translate(0%, 0%);
+  }
+}
+
+@keyframes bg-float {
+  0% {
+    transform: scale(1.02) translateY(0px);
+  }
+  50% {
+    transform: scale(1.05) translateY(-8px);
+  }
+  100% {
+    transform: scale(1.02) translateY(0px);
+  }
+}
+
+@keyframes bg-soft-pulse {
+  0%, 100% {
+    filter: brightness(100%) contrast(100%);
+    transform: scale(1.02);
+  }
+  50% {
+    filter: brightness(108%) contrast(104%);
+    transform: scale(1.05);
+  }
+}
+
 /* Custom Animation Classes */
+.animate-bg-kenburns {
+  animation: kenburns 35s ease-in-out infinite;
+}
+
+.animate-bg-float {
+  animation: bg-float 18s ease-in-out infinite;
+}
+
+.animate-bg-pulse {
+  animation: bg-soft-pulse 12s ease-in-out infinite;
+}
+
 .animate-float-orb {
   animation: float 6s ease-in-out infinite;
 }
