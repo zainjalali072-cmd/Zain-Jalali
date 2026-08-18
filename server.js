@@ -1,5 +1,4 @@
 // Hostinger & Node.js Universal Production Entry Point
-process.env.NODE_ENV = 'production';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

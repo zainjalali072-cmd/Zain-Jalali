@@ -74,7 +74,6 @@ export function BlogCard({ post, index, onClick }: BlogCardProps) {
           src={cardImg}
           alt={post.title || "Blog Article"}
           referrerPolicy="no-referrer"
-          loading="lazy"
           onError={(e) => {
             e.currentTarget.src = DEFAULT_POST_IMAGE;
           }}

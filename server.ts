@@ -1,27 +1,10 @@
 import express from "express";
-import compression from "compression";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
-import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 
-const getAppDir = (): string => {
-  if (typeof __dirname !== "undefined") {
-    return __dirname;
-  }
-  if (typeof import.meta !== "undefined" && import.meta?.url) {
-    try {
-      return path.dirname(fileURLToPath(import.meta.url));
-    } catch {
-      // ignore
-    }
-  }
-  return process.cwd();
-};
-
 const app = express();
-app.use(compression());
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const DB_FILE = path.join(process.cwd(), "db.json");
 
@@ -1299,8 +1282,6 @@ function injectSeoMetaTags(html: string): string {
 
 // Vite Middleware for dev or serving statics in production
 const startServer = async () => {
-  const distPath = path.join(process.cwd(), "dist");
-
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -1309,29 +1290,19 @@ const startServer = async () => {
 
     app.use(vite.middlewares);
   } else {
-    let targetDistPath = distPath;
-    if (!fs.existsSync(targetDistPath) && fs.existsSync(path.join(getAppDir(), "index.html"))) {
-      targetDistPath = getAppDir();
+    let distPath = path.join(process.cwd(), "dist");
+    if (!fs.existsSync(distPath) && fs.existsSync(path.join(__dirname, "index.html"))) {
+      distPath = __dirname;
     }
-    app.use(express.static(targetDistPath, {
-      maxAge: "1y",
-      etag: true,
-      setHeaders: (res, filePath) => {
-        if (filePath.endsWith(".html")) {
-          res.setHeader("Cache-Control", "no-cache, must-revalidate");
-        } else if (filePath.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?|ttf|eot)$/)) {
-          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-        }
-      }
-    }));
+    app.use(express.static(distPath));
     app.get("*", (req, res) => {
       try {
-        const indexPath = path.join(targetDistPath, "index.html");
+        const indexPath = path.join(distPath, "index.html");
         let html = fs.readFileSync(indexPath, "utf-8");
         html = injectSeoMetaTags(html);
         res.status(200).set({ "Content-Type": "text/html" }).end(html);
       } catch {
-        res.sendFile(path.join(targetDistPath, "index.html"));
+        res.sendFile(path.join(distPath, "index.html"));
       }
     });
   }

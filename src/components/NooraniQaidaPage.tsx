@@ -84,7 +84,7 @@ export default function NooraniQaidaPage() {
               src={islamicGirlQaida}
               alt="Child happily learning Noorani Qaida online"
               referrerPolicy="no-referrer"
-              className="w-full h-auto object-cover aspect-[4/3] transform-gpu animate-bg-float hover:scale-105 transition-transform duration-700"
+              className="w-full h-auto object-cover aspect-[4/3] hover:scale-105 transition-transform duration-700"
             />
             {/* Visual Glass Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />

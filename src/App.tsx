@@ -30,7 +30,7 @@ import {
 
 import Header from "./components/Header";
 import Starfield from "./components/Starfield";
-import AnimatedSectionBackground from "./components/AnimatedSectionBackground";
+import WhatsAppModal from "./components/WhatsAppModal";
 import logoImg from "./assets/images/truth_quran_new_logo_1784203145448.jpg";
 import kidsLearningBg from "./assets/images/kids_quran_learning_1784116863937.jpg";
 import teacherBg from "./assets/images/online_quran_teacher_1784116886285.jpg";
@@ -38,16 +38,17 @@ import femaleTeacherBg from "./assets/images/female_quran_tutor_1784119152017.jp
 import tajweedMasteryBg from "./assets/images/tajweed_mastery_art_1784119171753.jpg";
 import islamicKidsLearningBg from "./assets/images/islamic_kids_learning_1784120227940.jpg";
 import islamicGirlQaidaBg from "./assets/images/islamic_girl_qaida_1784120204322.jpg";
-import Footer from "./components/Footer";
-import AutoOpeningQuran from "./components/AutoOpeningQuran";
-import SEOHead from "./components/SEOHead";
-import { getCMSData, fetchCMSDataFromServer } from "./cmsStore";
-
 import FAQAccordion from "./components/FAQAccordion";
 import ContactForm from "./components/ContactForm";
 import MapSection from "./components/MapSection";
+import DeveloperCard from "./components/DeveloperCard";
+import Footer from "./components/Footer";
+import AutoOpeningQuran from "./components/AutoOpeningQuran";
 import BlogSection from "./components/BlogSection";
-import WhatsAppModal from "./components/WhatsAppModal";
+import WPSimulator from "./components/WPSimulator";
+import SEOHead from "./components/SEOHead";
+import { getCMSData, fetchCMSDataFromServer } from "./cmsStore";
+
 import AboutPage from "./components/AboutPage";
 import CoursesPage from "./components/CoursesPage";
 import NooraniQaidaPage from "./components/NooraniQaidaPage";
@@ -57,34 +58,21 @@ import VideosPage from "./components/VideosPage";
 import ContactPage from "./components/ContactPage";
 import DownloadPage from "./components/DownloadPage";
 
-const WPSimulator = React.lazy(() => import("./components/WPSimulator"));
-
-// Throttled custom count-up component to prevent main-thread re-render thrashing
-function CountUpNumber({ end, suffix = "", duration = 1600 }: { end: number; suffix?: string; duration?: number }) {
+// Simple custom count-up component using React state and native frame scheduler
+function CountUpNumber({ end, suffix = "", duration = 2000 }: { end: number; suffix?: string; duration?: number }) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
     let startTimestamp: number | null = null;
-    let lastUpdate = 0;
-    let frameId: number;
-
     const step = (timestamp: number) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      
-      // Update state at most every 40ms (~25fps) to save CPU/GPU main thread
-      if (timestamp - lastUpdate > 40 || progress === 1) {
-        lastUpdate = timestamp;
-        setCount(Math.floor(progress * end));
-      }
-
+      setCount(Math.floor(progress * end));
       if (progress < 1) {
-        frameId = window.requestAnimationFrame(step);
+        window.requestAnimationFrame(step);
       }
     };
-
-    frameId = window.requestAnimationFrame(step);
-    return () => window.cancelAnimationFrame(frameId);
+    window.requestAnimationFrame(step);
   }, [end, duration]);
 
   return (
@@ -170,15 +158,13 @@ export default function App() {
 
   if (isWpAdmin) {
     return (
-      <React.Suspense fallback={<div className="min-h-screen bg-[#07080b] flex items-center justify-center text-[#d9b45c]"><div className="w-8 h-8 rounded-full border-2 border-[#d9b45c] border-t-transparent animate-spin" /></div>}>
-        <WPSimulator 
-          onClose={() => {
-            window.history.pushState(null, "", "/");
-            setIsWpAdmin(false);
-            setView("home");
-          }} 
-        />
-      </React.Suspense>
+      <WPSimulator 
+        onClose={() => {
+          window.history.pushState(null, "", "/");
+          setIsWpAdmin(false);
+          setView("home");
+        }} 
+      />
     );
   }
 
@@ -293,20 +279,15 @@ export default function App() {
       {/* Main Content Area */}
       <main className="relative z-10">
         
-        {(!currentView || currentView === "home" || !["about", "courses", "services", "noorani-qaida", "kids-classes", "fees", "pricing", "download", "videos", "blog", "contact", "blog-post"].includes(currentView)) && (
+        {currentView === "home" && (
           <>
             {/* HERO SECTION */}
             {cms.sectionsVisibility?.hero !== false && (
               <section 
                 id="hero" 
-                className="relative pt-10 pb-20 md:py-28 overflow-hidden flex items-center min-h-[calc(100vh-80px)]"
+                className="hero-section-bg pt-10 pb-20 md:py-28 overflow-hidden flex items-center min-h-[calc(100vh-80px)]"
               >
-                <AnimatedSectionBackground 
-                  imageUrl={cms.customImages?.heroBg?.url || kidsLearningBg}
-                  animationType="kenburns"
-                  overlayGradient="linear-gradient(to bottom, rgba(14, 16, 21, 0.93), rgba(7, 8, 11, 0.97))"
-                />
-              <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center w-full relative z-10">
+              <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center w-full">
                 
                 {/* Left Column: Text & Stats */}
                 <div className="lg:col-span-7 space-y-8 text-left" id="hero-left-content">
@@ -455,13 +436,8 @@ export default function App() {
 
             {/* WHY CHOOSE US */}
             {cms.sectionsVisibility?.whyUs !== false && (
-            <section id="why-us" className="relative border-y border-[#d9b45c]/10 overflow-hidden">
-              <AnimatedSectionBackground 
-                imageUrl={cms.customImages?.aboutFemaleTeacherBg?.url || femaleTeacherBg}
-                animationType="float"
-                overlayGradient="linear-gradient(to bottom, rgba(7, 8, 11, 0.95), rgba(14, 16, 21, 0.96))"
-              />
-              <div className="max-w-7xl mx-auto px-6 py-20 md:py-28 relative z-10">
+            <section id="why-us" className="why-us-section-bg border-y border-[#d9b45c]/10">
+              <div className="max-w-7xl mx-auto px-6 py-20 md:py-28 relative">
                 {/* Decorative side blurs */}
                 <div className="absolute top-1/4 left-0 w-72 h-72 bg-[#d9b45c]/3 blur-[120px] pointer-events-none rounded-full" />
                 <div className="absolute bottom-1/4 right-0 w-72 h-72 bg-[#d9b45c]/3 blur-[120px] pointer-events-none rounded-full" />
@@ -529,13 +505,8 @@ export default function App() {
 
             {/* COURSES SECTION */}
             {cms.sectionsVisibility?.courses !== false && (
-            <section id="courses" className="relative py-20 md:py-28 border-y border-[#d9b45c]/12 overflow-hidden">
-              <AnimatedSectionBackground 
-                imageUrl={cms.customImages?.tajweedMasteryBg?.url || tajweedMasteryBg}
-                animationType="kenburns"
-                overlayGradient="linear-gradient(to bottom, rgba(14, 16, 21, 0.94), rgba(7, 8, 11, 0.96))"
-              />
-              <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <section id="courses" className="courses-section-bg py-20 md:py-28 border-y border-[#d9b45c]/12">
+              <div className="max-w-7xl mx-auto px-6">
                 
                 {/* Centered Heading */}
                 <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
@@ -570,7 +541,7 @@ export default function App() {
                           src={course.image} 
                           alt={course.title}
                           referrerPolicy="no-referrer"
-                          className="absolute inset-0 w-full h-full object-cover opacity-25 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700 pointer-events-none transform-gpu animate-bg-float"
+                          className="absolute inset-0 w-full h-full object-cover opacity-25 group-hover:scale-110 transition-transform duration-700 pointer-events-none"
                         />
                         
                         {/* Glowing backdrop & overlay */}
@@ -633,13 +604,8 @@ export default function App() {
 
             {/* PROCESS SECTION */}
             {cms.sectionsVisibility?.process !== false && (
-            <section id="process" className="relative border-y border-[#d9b45c]/10 overflow-hidden">
-              <AnimatedSectionBackground 
-                imageUrl={cms.customImages?.islamicKidsLearningBg?.url || islamicKidsLearningBg}
-                animationType="float"
-                overlayGradient="linear-gradient(to bottom, rgba(7, 8, 11, 0.94), rgba(14, 16, 21, 0.97))"
-              />
-              <div className="max-w-7xl mx-auto px-6 py-20 md:py-28 relative z-10">
+            <section id="process" className="process-section-bg border-y border-[#d9b45c]/10">
+              <div className="max-w-7xl mx-auto px-6 py-20 md:py-28">
                 
                 {/* Centered Heading */}
                 <div className="text-center max-w-2xl mx-auto mb-20 space-y-3">
@@ -699,13 +665,8 @@ export default function App() {
 
             {/* PRICING SECTION */}
             {cms.sectionsVisibility?.pricing !== false && (
-            <section id="pricing" className="relative py-20 md:py-28 border-y border-[#d9b45c]/12 overflow-hidden">
-              <AnimatedSectionBackground 
-                imageUrl={cms.customImages?.aboutTeacherBg?.url || teacherBg}
-                animationType="pulse"
-                overlayGradient="linear-gradient(to bottom, rgba(14, 16, 21, 0.95), rgba(7, 8, 11, 0.95))"
-              />
-              <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <section id="pricing" className="pricing-section-bg py-20 md:py-28 border-y border-[#d9b45c]/12 relative">
+              <div className="max-w-7xl mx-auto px-6">
                 
                 {/* Centered Heading */}
                 <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
@@ -862,13 +823,8 @@ export default function App() {
 
             {/* TESTIMONIALS */}
             {cms.sectionsVisibility?.testimonials !== false && (
-            <section id="reviews" className="relative py-20 md:py-28 overflow-hidden border-y border-[#d9b45c]/12">
-              <AnimatedSectionBackground 
-                imageUrl={cms.customImages?.aboutFemaleTeacherBg?.url || femaleTeacherBg}
-                animationType="float"
-                overlayGradient="linear-gradient(to bottom, rgba(7, 8, 11, 0.95), rgba(14, 16, 21, 0.95))"
-              />
-              <div className="relative z-10">
+            <section id="reviews" className="reviews-section-bg py-20 md:py-28 overflow-hidden border-y border-[#d9b45c]/12">
+              
               {/* Centered Heading */}
               <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
                 <span className="text-[12px] font-sans uppercase font-bold tracking-[0.22em] text-[#d9b45c]">
@@ -922,19 +878,13 @@ export default function App() {
 
                 </div>
               </div>
-              </div>
             </section>
             )}
 
             {/* ACADEMY BLOG SECTION (Archive Mode) */}
             {cms.sectionsVisibility?.blog !== false && (
-            <section id="blog" className="relative py-20 md:py-28 border-y border-[#d9b45c]/12 overflow-hidden">
-              <AnimatedSectionBackground 
-                imageUrl={cms.customImages?.tajweedMasteryBg?.url || tajweedMasteryBg}
-                animationType="kenburns"
-                overlayGradient="linear-gradient(to bottom, rgba(14, 16, 21, 0.95), rgba(7, 8, 11, 0.97))"
-              />
-              <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <section id="blog" className="blog-section-bg py-20 md:py-28 border-y border-[#d9b45c]/12">
+              <div className="max-w-7xl mx-auto px-6">
                 
                 {/* Centered Heading */}
                 <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
@@ -963,13 +913,8 @@ export default function App() {
 
             {/* GENERAL FAQ SECTION */}
             {cms.sectionsVisibility?.faqs !== false && (
-            <section id="faq" className="relative border-y border-[#d9b45c]/10 overflow-hidden">
-              <AnimatedSectionBackground 
-                imageUrl={cms.customImages?.islamicGirlQaidaBg?.url || islamicGirlQaidaBg}
-                animationType="float"
-                overlayGradient="linear-gradient(to bottom, rgba(7, 8, 11, 0.95), rgba(14, 16, 21, 0.96))"
-              />
-              <div className="max-w-7xl mx-auto px-6 py-20 md:py-28 relative z-10">
+            <section id="faq" className="faq-section-bg border-y border-[#d9b45c]/10">
+              <div className="max-w-7xl mx-auto px-6 py-20 md:py-28">
                 
                 {/* Centered Heading */}
                 <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
@@ -992,12 +937,8 @@ export default function App() {
             )}
 
             {/* CTA BAND (Full Width Contrasting Gradient Band) */}
-            <section className="relative py-16 md:py-20 overflow-hidden border-y border-[#d9b45c]/20">
-              <AnimatedSectionBackground 
-                imageUrl={cms.customImages?.aboutTeacherBg?.url || teacherBg}
-                animationType="pulse"
-                overlayGradient="linear-gradient(to bottom, rgba(14, 16, 21, 0.94), rgba(7, 8, 11, 0.97))"
-              />
+            <section className="contact-section-bg py-16 md:py-20 relative overflow-hidden border-y border-[#d9b45c]/20">
+              
               {/* Soft gold backdrop glow */}
               <div className="absolute inset-0 bg-[#d9b45c]/3 pointer-events-none filter blur-[80px]" />
 
@@ -1051,7 +992,7 @@ export default function App() {
         )}
 
         {currentView === "about" && <AboutPage setView={setView} />}
-        {(currentView === "courses" || currentView === "services") && <CoursesPage />}
+        {currentView === "courses" && <CoursesPage />}
         {currentView === "noorani-qaida" && <NooraniQaidaPage />}
         {currentView === "kids-classes" && <KidsClassesPage />}
         {currentView === "fees" && <FeesPage />}
@@ -1098,9 +1039,10 @@ export default function App() {
         onNavigate={handleScrollToSection} 
       />
 
+
+
        {/* 16. Floating WhatsApp Pulse Button & Modal */}
        <WhatsAppModal />
-
  
      </div>
    );

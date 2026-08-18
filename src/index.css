@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -70,60 +71,7 @@ body {
   }
 }
 
-@keyframes kenburns {
-  0% {
-    transform: scale(1) translate(0%, 0%);
-  }
-  25% {
-    transform: scale(1.04) translate(-0.8%, 0.5%);
-  }
-  50% {
-    transform: scale(1.08) translate(0.6%, -0.8%);
-  }
-  75% {
-    transform: scale(1.04) translate(0.8%, 0.6%);
-  }
-  100% {
-    transform: scale(1) translate(0%, 0%);
-  }
-}
-
-@keyframes bg-float {
-  0% {
-    transform: scale(1.02) translateY(0px);
-  }
-  50% {
-    transform: scale(1.05) translateY(-8px);
-  }
-  100% {
-    transform: scale(1.02) translateY(0px);
-  }
-}
-
-@keyframes bg-soft-pulse {
-  0%, 100% {
-    filter: brightness(100%) contrast(100%);
-    transform: scale(1.02);
-  }
-  50% {
-    filter: brightness(108%) contrast(104%);
-    transform: scale(1.05);
-  }
-}
-
 /* Custom Animation Classes */
-.animate-bg-kenburns {
-  animation: kenburns 35s ease-in-out infinite;
-}
-
-.animate-bg-float {
-  animation: bg-float 18s ease-in-out infinite;
-}
-
-.animate-bg-pulse {
-  animation: bg-soft-pulse 12s ease-in-out infinite;
-}
-
 .animate-float-orb {
   animation: float 6s ease-in-out infinite;
 }
@@ -175,11 +123,7 @@ body {
   background-image: linear-gradient(to bottom, rgba(14, 16, 21, 0.94), rgba(7, 8, 11, 0.97)), url("./assets/images/online_quran_teacher_1784116886285.jpg");
   background-size: cover;
   background-position: center;
-}
-@media (min-width: 1024px) {
-  .hero-section-bg, .process-section-bg, .contact-section-bg {
-    background-attachment: fixed;
-  }
+  background-attachment: fixed;
 }
 
 .why-us-section-bg {
@@ -201,6 +145,7 @@ body {
   background-image: linear-gradient(to bottom, rgba(7, 8, 11, 0.94), rgba(14, 16, 21, 0.97)), url("./assets/images/islamic_kids_learning_1784120227940.jpg");
   background-size: cover;
   background-position: center;
+  background-attachment: fixed;
 }
 
 .pricing-section-bg {
@@ -236,4 +181,5 @@ body {
   background-image: linear-gradient(to bottom, rgba(14, 16, 21, 0.94), rgba(7, 8, 11, 0.97)), url("./assets/images/online_quran_teacher_1784116886285.jpg");
   background-size: cover;
   background-position: center;
+  background-attachment: fixed;
 }

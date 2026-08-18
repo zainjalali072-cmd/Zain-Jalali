@@ -1,17 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { motion } from "motion/react";
 import quran3DIconImg from "../assets/images/holy_quran_icon_1784372106996.jpg";
-import { getCMSData } from "../cmsStore";
 
 export default function AutoOpeningQuran() {
-  const [cms, setCms] = useState(getCMSData());
-
-  useEffect(() => {
-    const handleUpdate = () => setCms(getCMSData());
-    window.addEventListener("cms_data_updated", handleUpdate);
-    return () => window.removeEventListener("cms_data_updated", handleUpdate);
-  }, []);
-
   // Complete majestic Arabic text of Surah Al-Ikhlas with verse markers and elegant stars
   const surahIkhlasText = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ ✦ قُلْ هُوَ اللَّهُ أَحَدٌ ﴿١﴾ اللَّهُ الصَّمَدُ ﴿٢﴾ لَمْ يَلِدْ وَلَمْ يُولَدْ ﴿٣﴾ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ ﴿٤﴾ ✦";
 
@@ -74,16 +65,9 @@ export default function AutoOpeningQuran() {
             <div className="w-full h-full rounded-full overflow-hidden relative flex items-center justify-center">
               {/* High-Resolution 3D Quran Cover Image */}
               <img 
-                src={cms.customImages?.quran3DIcon?.url || quran3DIconImg} 
+                src={quran3DIconImg} 
                 alt="Premium 3D Holy Quran Cover" 
                 referrerPolicy="no-referrer"
-                loading="eager"
-                fetchPriority="high"
-                width={250}
-                height={250}
-                onError={(e) => {
-                  e.currentTarget.src = quran3DIconImg;
-                }}
                 className="absolute inset-0 w-full h-full object-cover scale-[1.05] group-hover:scale-[1.12] transition-transform duration-700 select-none pointer-events-none"
                 style={{ filter: "brightness(112%) contrast(128%)" }}
               />

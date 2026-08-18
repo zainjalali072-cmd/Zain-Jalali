@@ -52,7 +52,7 @@ export default function AboutPage({ setView }: { setView: (view: string) => void
               src={cms.customImages?.aboutTeacherBg?.url || teacherBg}
               alt={cms.customImages?.aboutTeacherBg?.alt || "Online Quran tutor teaching a lesson"}
               referrerPolicy="no-referrer"
-              className="w-full h-auto object-cover aspect-[4/3] transform-gpu animate-bg-float hover:scale-105 transition-transform duration-700"
+              className="w-full h-auto object-cover aspect-[4/3] hover:scale-105 transition-transform duration-700"
             />
             {/* Subtle Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#07080b]/90 via-transparent to-transparent" />

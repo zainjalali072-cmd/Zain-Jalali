@@ -70,10 +70,9 @@ export default function CoursesPage() {
                   src={course.image}
                   alt={course.title}
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover transform-gpu animate-bg-float group-hover:scale-110 transition-transform duration-700 pointer-events-none"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#12141b] via-black/35 to-transparent pointer-events-none" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(217,180,92,0.12)_0%,transparent_75%)] pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#12141b] via-black/25 to-transparent" />
                 
                 {/* Level Tag Overlay */}
                 <span className="absolute top-4 right-4 text-[9px] font-sans uppercase font-bold text-[#d9b45c] bg-[#07080b]/90 border border-[#d9b45c]/25 px-2.5 py-1 rounded-full">
