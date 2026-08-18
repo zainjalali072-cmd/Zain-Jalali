@@ -139,3 +139,27 @@ export interface WPVideo {
   enabled: boolean;
   pages: string[]; // specific page names where video is enabled/embedded, e.g. ["home", "about", "videos"]
 }
+
+export type AIProviderId = "gemini" | "openai" | "anthropic";
+
+export interface AIProviderConfig {
+  enabled: boolean;
+  apiKey: string;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+  statusMessage?: string;
+  lastTested?: string;
+  isValidated?: boolean;
+}
+
+export interface AISettings {
+  defaultProvider: AIProviderId;
+  isEnabled: boolean;
+  autoDraftingEnabled?: boolean;
+  providers: {
+    openai: AIProviderConfig;
+    gemini: AIProviderConfig;
+    anthropic: AIProviderConfig;
+  };
+}

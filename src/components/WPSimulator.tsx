@@ -47,12 +47,14 @@ import {
   Sliders,
   DollarSign,
   Lock,
-  ArrowLeft
+  ArrowLeft,
+  Bot
 } from "lucide-react";
 
 import WPContentManager from "./WPContentManager";
 import { WPMediaLibraryModal } from "./WPMediaLibraryModal";
 import { WPUserManager } from "./WPUserManager";
+import WPAISettings from "./WPAISettings";
 
 interface WPSimulatorProps {
   onClose?: () => void;
@@ -61,7 +63,7 @@ interface WPSimulatorProps {
 export default function WPSimulator({ onClose }: WPSimulatorProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "posts" | "pages" | "media" | "videos" | "comments" | "customizer" | "rankmath" | "seo-settings" | "users" | "settings" | "tools" | "theme" | "courses" | "teachers" | "testimonials" | "faqs" | "services" | "pricing"
+    "dashboard" | "posts" | "pages" | "media" | "videos" | "comments" | "customizer" | "rankmath" | "seo-settings" | "ai-settings" | "users" | "settings" | "tools" | "theme" | "courses" | "teachers" | "testimonials" | "faqs" | "services" | "pricing"
   >("dashboard");
   const [cmsData, setCmsData] = useState<CMSData>(getCMSData());
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -582,6 +584,14 @@ export default function WPSimulator({ onClose }: WPSimulatorProps) {
                     >
                       <Globe size={14} />
                       <span>SEO Settings</span>
+                    </button>
+
+                    <button 
+                      onClick={() => setActiveTab("ai-settings")}
+                      className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-sans font-bold uppercase tracking-wider transition-all text-left ${activeTab === "ai-settings" ? "bg-[#d9b45c]/10 text-[#f2d98a] border-l-2 border-[#d9b45c]" : "text-[#c9c2ab] hover:bg-[#d9b45c]/5 hover:text-[#f3ecd8]"}`}
+                    >
+                      <Bot size={14} />
+                      <span>AI Integrations</span>
                     </button>
 
                     <button 
@@ -1549,6 +1559,16 @@ export default function WPSimulator({ onClose }: WPSimulatorProps) {
 
                     </div>
                   </div>
+                )}
+
+                {/* TAB: AI INTEGRATIONS & API CREDENTIALS */}
+                {activeTab === "ai-settings" && (
+                  <WPAISettings
+                    cmsData={cmsData}
+                    onSave={(updatedData, customMsg) => {
+                      handleSave(updatedData, customMsg);
+                    }}
+                  />
                 )}
 
                 {/* TAB 11: WP TOOLS */}

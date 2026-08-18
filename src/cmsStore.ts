@@ -1,6 +1,6 @@
 import { academyContact, coursesData, whyUsData, pricingPlans, testimonialsData, faqItems, blogPostsData } from "./data";
-import { Course, WhyUsPoint, PricingPlan, Testimonial, FAQItem, BlogPost, WPVideo } from "./types";
-export type { Course, WhyUsPoint, PricingPlan, Testimonial, FAQItem, BlogPost, WPVideo };
+import { Course, WhyUsPoint, PricingPlan, Testimonial, FAQItem, BlogPost, WPVideo, AISettings, AIProviderConfig, AIProviderId } from "./types";
+export type { Course, WhyUsPoint, PricingPlan, Testimonial, FAQItem, BlogPost, WPVideo, AISettings, AIProviderConfig, AIProviderId };
 
 import logoImg from "./assets/images/truth_quran_new_logo_1784203145448.jpg";
 import kidsLearningBg from "./assets/images/kids_quran_learning_1784116863937.jpg";
@@ -205,7 +205,40 @@ export interface CMSData {
     securityFirewallActive: boolean;
   };
   widgets: Record<string, string[]>; // footer1, footer2, sidebar widget items list
+  aiSettings?: AISettings;
 }
+
+export const DEFAULT_AI_SETTINGS: AISettings = {
+  defaultProvider: "gemini",
+  isEnabled: true,
+  autoDraftingEnabled: true,
+  providers: {
+    openai: {
+      enabled: false,
+      apiKey: "",
+      model: "gpt-4o",
+      temperature: 0.7,
+      maxTokens: 2048,
+      isValidated: false
+    },
+    gemini: {
+      enabled: true,
+      apiKey: "",
+      model: "gemini-2.5-flash",
+      temperature: 0.7,
+      maxTokens: 2048,
+      isValidated: true
+    },
+    anthropic: {
+      enabled: false,
+      apiKey: "",
+      model: "claude-3-5-sonnet-20241022",
+      temperature: 0.7,
+      maxTokens: 2048,
+      isValidated: false
+    }
+  }
+};
 
 const DEFAULT_SEO_SETTINGS: Record<string, SEOConfig> = {
   home: {
@@ -833,6 +866,7 @@ export const getCMSData = (): CMSData => {
       elementorCompatible: true,
       securityFirewallActive: true
     },
+    aiSettings: DEFAULT_AI_SETTINGS,
     customImages: DEFAULT_CUSTOM_IMAGES
   };
 };

@@ -424,6 +424,37 @@ const inputScrubber = (req: express.Request, res: express.Response, next: expres
   next();
 };
 
+// Static Favicon and Brand Asset Handlers
+app.get("/favicon.ico", (req, res) => {
+  const icoPath = path.join(process.cwd(), "public", "favicon.ico");
+  if (fs.existsSync(icoPath)) {
+    res.setHeader("Content-Type", "image/x-icon");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    return res.sendFile(icoPath);
+  }
+  res.status(404).end();
+});
+
+app.get("/favicon-:size.png", (req, res) => {
+  const file = path.join(process.cwd(), "public", `favicon-${req.params.size}.png`);
+  if (fs.existsSync(file)) {
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    return res.sendFile(file);
+  }
+  res.status(404).end();
+});
+
+app.get("/logo.png", (req, res) => {
+  const file = path.join(process.cwd(), "public", "logo.png");
+  if (fs.existsSync(file)) {
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    return res.sendFile(file);
+  }
+  res.status(404).end();
+});
+
 // Auth endpoints
 app.post("/api/auth/login", (req, res) => {
   const { email, password } = req.body;
@@ -760,101 +791,415 @@ app.post("/api/cms-data", csrfProtection, inputScrubber, (req, res) => {
   return res.json({ success: true, message: "WP DB fully synchronized!" });
 });
 
+// AI Test Connection endpoint for verifying provider API keys
+app.post("/api/ai/test-connection", async (req, res) => {
+  const startTime = Date.now();
+  try {
+    const { provider, apiKey, model } = req.body;
+
+    if (!provider) {
+      return res.status(400).json({ success: false, error: "Missing required 'provider' parameter." });
+    }
+
+    if (provider === "gemini") {
+      const keyToUse = (apiKey && apiKey.trim()) || process.env.GEMINI_API_KEY;
+      if (!keyToUse) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Missing Google Gemini API key. Please input your Gemini API Key from Google AI Studio (or configure GEMINI_API_KEY in environment)." 
+        });
+      }
+
+      const { GoogleGenAI } = await import("@google/genai");
+      const ai = new GoogleGenAI({ apiKey: keyToUse });
+      const modelToUse = model || "gemini-2.5-flash";
+
+      const response = await ai.models.generateContent({
+        model: modelToUse,
+        contents: "Respond with the single word: OK"
+      });
+
+      const latencyMs = Date.now() - startTime;
+      const responseText = response.text ? response.text.trim() : "OK";
+
+      return res.json({
+        success: true,
+        latencyMs,
+        provider: "gemini",
+        model: modelToUse,
+        message: `Successfully connected to Google Gemini (${modelToUse})! Response received in ${latencyMs}ms.`,
+        sampleResponse: responseText
+      });
+
+    } else if (provider === "openai") {
+      const keyToUse = (apiKey && apiKey.trim()) || process.env.OPENAI_API_KEY;
+      if (!keyToUse) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Missing OpenAI API key. Please enter your secret key starting with 'sk-' from the OpenAI Developer Portal." 
+        });
+      }
+
+      const modelToUse = model || "gpt-4o-mini";
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+      try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${keyToUse}`
+          },
+          body: JSON.stringify({
+            model: modelToUse,
+            messages: [{ role: "user", content: "Test ping. Respond with single word: OK" }],
+            max_tokens: 10
+          })
+        });
+        clearTimeout(timeoutId);
+
+        const latencyMs = Date.now() - startTime;
+
+        if (response.ok) {
+          const data = await response.json();
+          const sample = data?.choices?.[0]?.message?.content?.trim() || "OK";
+          return res.json({
+            success: true,
+            latencyMs,
+            provider: "openai",
+            model: modelToUse,
+            message: `Successfully connected to OpenAI (${modelToUse})! Response received in ${latencyMs}ms.`,
+            sampleResponse: sample
+          });
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          const errMsg = errData?.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+          return res.status(response.status).json({
+            success: false,
+            provider: "openai",
+            latencyMs,
+            error: `OpenAI API Error (${response.status}): ${errMsg}`
+          });
+        }
+      } catch (fetchErr: any) {
+        clearTimeout(timeoutId);
+        const latencyMs = Date.now() - startTime;
+        return res.status(500).json({
+          success: false,
+          provider: "openai",
+          latencyMs,
+          error: fetchErr.name === "AbortError" ? "OpenAI request timed out after 12 seconds." : (fetchErr.message || "Failed to reach OpenAI API.")
+        });
+      }
+
+    } else if (provider === "anthropic") {
+      const keyToUse = (apiKey && apiKey.trim()) || process.env.ANTHROPIC_API_KEY;
+      if (!keyToUse) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Missing Anthropic API key. Please enter your secret key starting with 'sk-ant-' from the Anthropic Console." 
+        });
+      }
+
+      const modelToUse = model || "claude-3-5-haiku-20241022";
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+      try {
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": keyToUse,
+            "anthropic-version": "2023-06-01"
+          },
+          body: JSON.stringify({
+            model: modelToUse,
+            max_tokens: 10,
+            messages: [{ role: "user", content: "Test ping. Respond with single word: OK" }]
+          })
+        });
+        clearTimeout(timeoutId);
+
+        const latencyMs = Date.now() - startTime;
+
+        if (response.ok) {
+          const data = await response.json();
+          const sample = data?.content?.[0]?.text?.trim() || "OK";
+          return res.json({
+            success: true,
+            latencyMs,
+            provider: "anthropic",
+            model: modelToUse,
+            message: `Successfully connected to Anthropic Claude (${modelToUse})! Response received in ${latencyMs}ms.`,
+            sampleResponse: sample
+          });
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          const errMsg = errData?.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+          return res.status(response.status).json({
+            success: false,
+            provider: "anthropic",
+            latencyMs,
+            error: `Anthropic Claude API Error (${response.status}): ${errMsg}`
+          });
+        }
+      } catch (fetchErr: any) {
+        clearTimeout(timeoutId);
+        const latencyMs = Date.now() - startTime;
+        return res.status(500).json({
+          success: false,
+          provider: "anthropic",
+          latencyMs,
+          error: fetchErr.name === "AbortError" ? "Anthropic request timed out after 12 seconds." : (fetchErr.message || "Failed to reach Anthropic Claude API.")
+        });
+      }
+
+    } else {
+      return res.status(400).json({ success: false, error: `Unsupported provider: ${provider}. Supported providers: gemini, openai, anthropic.` });
+    }
+
+  } catch (err: any) {
+    const latencyMs = Date.now() - startTime;
+    console.error("AI Test Connection Error:", err);
+    return res.status(500).json({
+      success: false,
+      latencyMs,
+      error: err.message || "An unexpected error occurred while testing the AI API connection."
+    });
+  }
+});
+
+// Generic Prompt Generator endpoint for testing / custom AI tasks
+app.post("/api/ai/generate", async (req, res) => {
+  try {
+    const { prompt, provider: requestedProvider, model: requestedModel, temperature, maxTokens } = req.body;
+    if (!prompt) {
+      return res.status(400).json({ error: "Missing required 'prompt' string." });
+    }
+
+    const db = getDatabase();
+    const aiConfig = db.aiSettings || {};
+    const defaultProvider = aiConfig.defaultProvider || "gemini";
+    const provider = requestedProvider || defaultProvider;
+
+    const providerSettings = aiConfig.providers?.[provider] || {};
+    const apiKey = providerSettings.apiKey || (provider === "gemini" ? process.env.GEMINI_API_KEY : provider === "openai" ? process.env.OPENAI_API_KEY : process.env.ANTHROPIC_API_KEY);
+    const model = requestedModel || providerSettings.model || (provider === "gemini" ? "gemini-2.5-flash" : provider === "openai" ? "gpt-4o" : "claude-3-5-sonnet-20241022");
+
+    if (provider === "gemini" && apiKey) {
+      const { GoogleGenAI } = await import("@google/genai");
+      const ai = new GoogleGenAI({ apiKey });
+      const response = await ai.models.generateContent({
+        model,
+        contents: prompt
+      });
+      return res.json({ success: true, provider: "gemini", model, result: (response.text || "").trim() });
+
+    } else if (provider === "openai" && apiKey) {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: prompt }],
+          temperature: typeof temperature === "number" ? temperature : 0.7,
+          max_tokens: typeof maxTokens === "number" ? maxTokens : 2048
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error?.message || `OpenAI returned status ${response.status}`);
+      }
+
+      const data = await response.json();
+      return res.json({ success: true, provider: "openai", model, result: data.choices?.[0]?.message?.content?.trim() || "" });
+
+    } else if (provider === "anthropic" && apiKey) {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01"
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: typeof maxTokens === "number" ? maxTokens : 2048,
+          temperature: typeof temperature === "number" ? temperature : 0.7,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error?.message || `Anthropic returned status ${response.status}`);
+      }
+
+      const data = await response.json();
+      return res.json({ success: true, provider: "anthropic", model, result: data?.content?.[0]?.text?.trim() || "" });
+
+    } else {
+      // Fallback response
+      return res.json({
+        success: true,
+        provider: "local-template",
+        result: `[Preview Mode] Generated insights for "${prompt.slice(0, 60)}...": Consistent practice, sincere spiritual dedication, and guidance from qualified scholars ensure excellence in Quran recitation and learning.`
+      });
+    }
+  } catch (err: any) {
+    console.error("AI Generate Error:", err);
+    return res.status(500).json({ error: err.message || "Failed to generate AI response." });
+  }
+});
+
 // AI Writing Assistant endpoint for English post editor
 app.post("/api/ai/writing-assistant", async (req, res) => {
   try {
-    const { action, text, title, context, keyword } = req.body;
-    const apiKey = process.env.GEMINI_API_KEY;
+    const { action, text, title, context, keyword, provider: reqProvider } = req.body;
+    const db = getDatabase();
+    const aiConfig = db.aiSettings || {};
+    const defaultProvider = aiConfig.defaultProvider || "gemini";
+    const activeProvider = reqProvider || defaultProvider;
 
-    if (apiKey) {
+    let prompt = "";
+    switch (action) {
+      case "grammar":
+        prompt = `Correct all grammar, punctuation, and spelling errors in the following English text. Maintain the original meaning and tone. Return ONLY the corrected text without preamble or quotes:\n\n${text}`;
+        break;
+      case "spelling":
+        prompt = `Fix any spelling errors in the following English text. Return ONLY the corrected text:\n\n${text}`;
+        break;
+      case "rewrite":
+        prompt = `Rewrite the following English text to make it clearer, more engaging, and professional. Return ONLY the rewritten text:\n\n${text}`;
+        break;
+      case "expand":
+        prompt = `Expand the following English text with relevant details, explanations, and context while preserving a professional tone. Return ONLY the expanded text:\n\n${text}`;
+        break;
+      case "shorten":
+        prompt = `Summarize and shorten the following English text into concise, impactful points or paragraphs. Return ONLY the shortened text:\n\n${text}`;
+        break;
+      case "readability":
+        prompt = `Improve the readability of the following English text. Use active voice, clear sentence structures, and accessible vocabulary. Return ONLY the revised text:\n\n${text}`;
+        break;
+      case "seo":
+        prompt = `Optimize the following English text for SEO${keyword ? ` targeting keyword '${keyword}'` : ""}. Naturally incorporate key search terms, headings, and clear structure. Return ONLY the optimized text:\n\n${text}`;
+        break;
+      case "humanize":
+        prompt = `Humanize the following text so it reads naturally like a human author wrote it, avoiding repetitive AI tropes or clichés. Return ONLY the humanized text:\n\n${text}`;
+        break;
+      case "tone":
+        prompt = `Improve the tone of the following English text to be respectful, inspiring, and authoritative (suited for an Islamic & Quranic education academy). Return ONLY the improved text:\n\n${text}`;
+        break;
+      case "intro":
+        prompt = `Write a captivating 2-paragraph introduction for an article titled "${title || text}". Highlight its importance and set an engaging tone. Return ONLY the introduction text:\n\n${text}`;
+        break;
+      case "conclusion":
+        prompt = `Write a strong concluding summary for an article titled "${title || "Article"}". Summarize key takeaways and include a soft call to action to study Quran and Tajweed. Return ONLY the conclusion:\n\n${text}`;
+        break;
+      case "faq":
+        prompt = `Generate 3 frequently asked questions with clear answers based on this article title/topic: "${title || text}". Format as clean Q&A pairs:\n\n${text}`;
+        break;
+      case "meta_title":
+        prompt = `Generate a compelling, SEO-optimized Meta Title (under 60 characters) for an article titled "${title || text}"${keyword ? ` focused on '${keyword}'` : ""}. Return ONLY the title text without quotes:\n\n${text}`;
+        break;
+      case "meta_desc":
+        prompt = `Generate an engaging SEO Meta Description (between 120 and 150 characters) for an article titled "${title || text}"${keyword ? ` focused on '${keyword}'` : ""}. Return ONLY the meta description text without quotes:\n\n${text}`;
+        break;
+      default:
+        prompt = `Improve the following English text for a blog post:\n\n${text}`;
+    }
+
+    const providerSettings = aiConfig.providers?.[activeProvider] || {};
+    const keyToUse = providerSettings.apiKey || (activeProvider === "gemini" ? process.env.GEMINI_API_KEY : activeProvider === "openai" ? process.env.OPENAI_API_KEY : process.env.ANTHROPIC_API_KEY);
+
+    if (activeProvider === "gemini" && keyToUse) {
       const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey });
-      
-      let prompt = "";
-      switch (action) {
-        case "grammar":
-          prompt = `Correct all grammar, punctuation, and spelling errors in the following English text. Maintain the original meaning and tone. Return ONLY the corrected text without preamble or quotes:\n\n${text}`;
-          break;
-        case "spelling":
-          prompt = `Fix any spelling errors in the following English text. Return ONLY the corrected text:\n\n${text}`;
-          break;
-        case "rewrite":
-          prompt = `Rewrite the following English text to make it clearer, more engaging, and professional. Return ONLY the rewritten text:\n\n${text}`;
-          break;
-        case "expand":
-          prompt = `Expand the following English text with relevant details, explanations, and context while preserving a professional tone. Return ONLY the expanded text:\n\n${text}`;
-          break;
-        case "shorten":
-          prompt = `Summarize and shorten the following English text into concise, impactful points or paragraphs. Return ONLY the shortened text:\n\n${text}`;
-          break;
-        case "readability":
-          prompt = `Improve the readability of the following English text. Use active voice, clear sentence structures, and accessible vocabulary. Return ONLY the revised text:\n\n${text}`;
-          break;
-        case "seo":
-          prompt = `Optimize the following English text for SEO${keyword ? ` targeting keyword '${keyword}'` : ""}. Naturally incorporate key search terms, headings, and clear structure. Return ONLY the optimized text:\n\n${text}`;
-          break;
-        case "humanize":
-          prompt = `Humanize the following text so it reads naturally like a human author wrote it, avoiding repetitive AI tropes or clichés. Return ONLY the humanized text:\n\n${text}`;
-          break;
-        case "tone":
-          prompt = `Improve the tone of the following English text to be respectful, inspiring, and authoritative (suited for an Islamic & Quranic education academy). Return ONLY the improved text:\n\n${text}`;
-          break;
-        case "intro":
-          prompt = `Write a captivating 2-paragraph introduction for an article titled "${title || text}". Highlight its importance and set an engaging tone. Return ONLY the introduction text:\n\n${text}`;
-          break;
-        case "conclusion":
-          prompt = `Write a strong concluding summary for an article titled "${title || "Article"}". Summarize key takeaways and include a soft call to action to study Quran and Tajweed. Return ONLY the conclusion:\n\n${text}`;
-          break;
-        case "faq":
-          prompt = `Generate 3 frequently asked questions with clear answers based on this article title/topic: "${title || text}". Format as clean Q&A pairs:\n\n${text}`;
-          break;
-        case "meta_title":
-          prompt = `Generate a compelling, SEO-optimized Meta Title (under 60 characters) for an article titled "${title || text}"${keyword ? ` focused on '${keyword}'` : ""}. Return ONLY the title text without quotes:\n\n${text}`;
-          break;
-        case "meta_desc":
-          prompt = `Generate an engaging SEO Meta Description (between 120 and 150 characters) for an article titled "${title || text}"${keyword ? ` focused on '${keyword}'` : ""}. Return ONLY the meta description text without quotes:\n\n${text}`;
-          break;
-        default:
-          prompt = `Improve the following English text for a blog post:\n\n${text}`;
-      }
-
+      const ai = new GoogleGenAI({ apiKey: keyToUse });
+      const model = providerSettings.model || "gemini-2.5-flash";
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model,
         contents: prompt
       });
-
       const resultText = response.text || "";
-      return res.json({ success: true, result: resultText.trim() });
-    } else {
-      // Fallback response generator if GEMINI_API_KEY is not configured
-      let fallbackResult = "";
-      const cleanText = (text || "").replace(/<[^>]*>/g, "").trim();
-      const articleTitle = title || "Quran & Tajweed Study Guide";
+      return res.json({ success: true, provider: "gemini", model, result: resultText.trim() });
 
-      if (action === "grammar" || action === "spelling") {
-        fallbackResult = cleanText ? cleanText.replace(/\bteh\b/gi, "the").replace(/\brecitiation\b/gi, "recitation") : "Proper recitation of the Holy Quran requires mastering the rules of Tajweed, including correct articulation points (Makharij).";
-      } else if (action === "rewrite") {
-        fallbackResult = cleanText ? `Mastering Tajweed and Quranic recitation enhances spiritual understanding. ${cleanText}` : `Developing a daily Quranic reading routine under certified tutors brings immense spiritual growth and clarity.`;
-      } else if (action === "expand") {
-        fallbackResult = cleanText ? `${cleanText}\n\nFurthermore, continuous practice under qualified teachers ensures accurate application of Ghunnah, Madd, and Ikhfa rules. Regular feedback from an experienced Qari builds confidence and precision in every ayah.` : `Learning Quranic recitation with proper Tajweed is a lifelong journey. Guided practice under certified Huffadh allows students to develop correct Makharij, master subtle phonetic rules, and build a deep, meaningful connection with the divine text.`;
-      } else if (action === "shorten") {
-        fallbackResult = cleanText ? cleanText.split(".").slice(0, 2).join(".") + "." : "Consistent Tajweed practice under qualified scholars ensures accurate Quran recitation.";
-      } else if (action === "intro") {
-        fallbackResult = `Reciting the Holy Quran with proper Tajweed is both a spiritual obligation and an enriching personal journey. Understanding correct phonetics, Makharij (points of articulation), and Sifat (characteristics of letters) allows reciters to convey the divine text as it was revealed.\n\nIn this comprehensive guide, we explore the essential rules and practical techniques every learner needs to achieve beauty, clarity, and precision in their Quranic recitation.`;
-      } else if (action === "conclusion") {
-        fallbackResult = `In conclusion, mastering Tajweed is a rewarding endeavor that transforms your connection with the Holy Quran. By committing to regular practice and seeking guidance from experienced teachers, you build accuracy and reverence in every recitation.\n\nReady to elevate your recitation? Book a free 1-on-1 evaluation session with certified tutors at Truth Quran Academy today.`;
-      } else if (action === "faq") {
-        fallbackResult = `Q: Why is Tajweed important in Quran recitation?\nA: Tajweed preserves the authentic pronunciation of the Quran, preventing errors in meaning and ensuring the letters are articulated correctly as revealed.\n\nQ: Can beginners learn Tajweed online?\nA: Yes! Private 1-on-1 online classes provide direct feedback from certified tutors, making learning easy and flexible for students of all ages.`;
-      } else if (action === "meta_title") {
-        fallbackResult = `${articleTitle.slice(0, 45)} | Essential Tajweed Guide`;
-      } else if (action === "meta_desc") {
-        fallbackResult = `Discover key Tajweed rules and practical Quranic recitation techniques in this expert guide from Truth Quran Academy certified tutors.`;
-      } else {
-        fallbackResult = cleanText || `Learn Quran recitation and Tajweed with private 1-on-1 online sessions taught by certified Huffadh.`;
+    } else if (activeProvider === "openai" && keyToUse) {
+      const model = providerSettings.model || "gpt-4o";
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${keyToUse}`
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          max_tokens: 2048
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return res.json({ success: true, provider: "openai", model, result: data.choices?.[0]?.message?.content?.trim() || "" });
       }
-
-      return res.json({ success: true, result: fallbackResult, fallbackUsed: true });
+    } else if (activeProvider === "anthropic" && keyToUse) {
+      const model = providerSettings.model || "claude-3-5-sonnet-20241022";
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": keyToUse,
+          "anthropic-version": "2023-06-01"
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: 2048,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return res.json({ success: true, provider: "anthropic", model, result: data?.content?.[0]?.text?.trim() || "" });
+      }
     }
+
+    // Fallback if no provider key configured
+    let fallbackResult = "";
+    const cleanText = (text || "").replace(/<[^>]*>/g, "").trim();
+    const articleTitle = title || "Quran & Tajweed Study Guide";
+
+    if (action === "grammar" || action === "spelling") {
+      fallbackResult = cleanText ? cleanText.replace(/\bteh\b/gi, "the").replace(/\brecitiation\b/gi, "recitation") : "Proper recitation of the Holy Quran requires mastering the rules of Tajweed, including correct articulation points (Makharij).";
+    } else if (action === "rewrite") {
+      fallbackResult = cleanText ? `Mastering Tajweed and Quranic recitation enhances spiritual understanding. ${cleanText}` : `Developing a daily Quranic reading routine under certified tutors brings immense spiritual growth and clarity.`;
+    } else if (action === "expand") {
+      fallbackResult = cleanText ? `${cleanText}\n\nFurthermore, continuous practice under qualified teachers ensures accurate application of Ghunnah, Madd, and Ikhfa rules. Regular feedback from an experienced Qari builds confidence and precision in every ayah.` : `Learning Quranic recitation with proper Tajweed is a lifelong journey. Guided practice under certified Huffadh allows students to develop correct Makharij, master subtle phonetic rules, and build a deep, meaningful connection with the divine text.`;
+    } else if (action === "shorten") {
+      fallbackResult = cleanText ? cleanText.split(".").slice(0, 2).join(".") + "." : "Consistent Tajweed practice under qualified scholars ensures accurate Quran recitation.";
+    } else if (action === "intro") {
+      fallbackResult = `Reciting the Holy Quran with proper Tajweed is both a spiritual obligation and an enriching personal journey. Understanding correct phonetics, Makharij (points of articulation), and Sifat (characteristics of letters) allows reciters to convey the divine text as it was revealed.\n\nIn this comprehensive guide, we explore the essential rules and practical techniques every learner needs to achieve beauty, clarity, and precision in their Quranic recitation.`;
+    } else if (action === "conclusion") {
+      fallbackResult = `In conclusion, mastering Tajweed is a rewarding endeavor that transforms your connection with the Holy Quran. By committing to regular practice and seeking guidance from experienced teachers, you build accuracy and reverence in every recitation.\n\nReady to elevate your recitation? Book a free 1-on-1 evaluation session with certified tutors at Truth Quran Academy today.`;
+    } else if (action === "faq") {
+      fallbackResult = `Q: Why is Tajweed important in Quran recitation?\nA: Tajweed preserves the authentic pronunciation of the Quran, preventing errors in meaning and ensuring the letters are articulated correctly as revealed.\n\nQ: Can beginners learn Tajweed online?\nA: Yes! Private 1-on-1 online classes provide direct feedback from certified tutors, making learning easy and flexible for students of all ages.`;
+    } else if (action === "meta_title") {
+      fallbackResult = `${articleTitle.slice(0, 45)} | Essential Tajweed Guide`;
+    } else if (action === "meta_desc") {
+      fallbackResult = `Discover key Tajweed rules and practical Quranic recitation techniques in this expert guide from Truth Quran Academy certified tutors.`;
+    } else {
+      fallbackResult = cleanText || `Learn Quran recitation and Tajweed with private 1-on-1 online sessions taught by certified Huffadh.`;
+    }
+
+    return res.json({ success: true, result: fallbackResult, fallbackUsed: true, provider: "fallback" });
+
   } catch (err: any) {
     console.error("AI Assistant Error:", err);
     return res.status(500).json({ error: "Failed to generate AI writing content." });
