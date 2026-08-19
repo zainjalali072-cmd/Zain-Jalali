@@ -138,14 +138,41 @@ export default function App() {
     if (currentView === "blog" && activePostId) {
       pageName = `blog/${activePostId}`;
     }
+
+    let sessionId = sessionStorage.getItem("tqa_session_id");
+    if (!sessionId) {
+      sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      sessionStorage.setItem("tqa_session_id", sessionId);
+    }
+
+    const path = `/${pageName === "home" ? "" : pageName}`;
+    const payload = {
+      page: path,
+      url: window.location.pathname,
+      referrer: document.referrer,
+      sessionId,
+      userAgent: navigator.userAgent
+    };
+
     fetch("/api/track-view", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-Requested-With": "XMLHttpRequest"
       },
-      body: JSON.stringify({ page: pageName })
+      body: JSON.stringify(payload)
     }).catch((e) => console.warn("Traffic tracker offline:", e));
+
+    // Active heartbeat ping every 25 seconds
+    const heartbeatInterval = setInterval(() => {
+      fetch("/api/analytics/heartbeat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, page: path })
+      }).catch(() => {});
+    }, 25000);
+
+    return () => clearInterval(heartbeatInterval);
   }, [currentView, activePostId]);
 
   // In-page navigation helper

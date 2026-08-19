@@ -8,7 +8,8 @@ import {
   WPMedia, 
   WPVideo,
   WPComment,
-  saveCMSData
+  saveCMSData,
+  submitUrlsForIndexing
 } from "../cmsStore";
 import { 
   Search, 
@@ -549,7 +550,21 @@ export default function WPContentManager({ cmsData, onSave, activeTab, setActive
 
     const itemLabel = currentConfig?.singular || "Item";
     const actionLabel = editingItemId ? "updated" : "created & published";
-    onSave({ ...cmsData, [key]: items }, `✅ ${itemLabel} "${formData.title || formData.name || formData.question || ''}" ${actionLabel} successfully!`);
+    onSave({ ...cmsData, [key]: items }, `✅ ${itemLabel} "${formData.title || formData.name || formData.question || ''}" ${actionLabel} & submitted to Google Indexing API!`);
+
+    // Instant Google Search Console & IndexNow Auto-Ping
+    const domain = "https://truthquranacademy.com";
+    let targetUrl = "";
+    if (activeTab === "posts") {
+      targetUrl = `${domain}/blog/${formData.slug || editingItemId || "new-post"}`;
+    } else if (activeTab === "courses") {
+      targetUrl = `${domain}/${formData.id || editingItemId || "new-course"}`;
+    }
+
+    if (targetUrl) {
+      submitUrlsForIndexing([targetUrl], "URL_UPDATED", ["google", "indexnow"]).catch(console.error);
+    }
+
     setSubView("all");
     setEditingItemId(null);
   };

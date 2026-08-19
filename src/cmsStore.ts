@@ -1,6 +1,6 @@
 import { academyContact, coursesData, whyUsData, pricingPlans, testimonialsData, faqItems, blogPostsData } from "./data";
-import { Course, WhyUsPoint, PricingPlan, Testimonial, FAQItem, BlogPost, WPVideo, AISettings, AIProviderConfig, AIProviderId } from "./types";
-export type { Course, WhyUsPoint, PricingPlan, Testimonial, FAQItem, BlogPost, WPVideo, AISettings, AIProviderConfig, AIProviderId };
+import { Course, WhyUsPoint, PricingPlan, Testimonial, FAQItem, BlogPost, WPVideo, AISettings, AIProviderConfig, AIProviderId, IndexingLogEntry, UrlIndexStatus, IndexingSettings } from "./types";
+export type { Course, WhyUsPoint, PricingPlan, Testimonial, FAQItem, BlogPost, WPVideo, AISettings, AIProviderConfig, AIProviderId, IndexingLogEntry, UrlIndexStatus, IndexingSettings };
 
 import logoImg from "./assets/images/truth_quran_new_logo_1784203145448.jpg";
 import kidsLearningBg from "./assets/images/kids_quran_learning_1784116863937.jpg";
@@ -206,7 +206,24 @@ export interface CMSData {
   };
   widgets: Record<string, string[]>; // footer1, footer2, sidebar widget items list
   aiSettings?: AISettings;
+  indexingSettings?: IndexingSettings;
+  indexingLogs?: IndexingLogEntry[];
+  urlIndexStatuses?: Record<string, UrlIndexStatus>;
 }
+
+export const DEFAULT_INDEXING_SETTINGS: IndexingSettings = {
+  isEnabled: true,
+  autoIndexPosts: true,
+  autoIndexCourses: true,
+  autoIndexPages: true,
+  autoPingSitemap: true,
+  googleServiceAccountEmail: "rankmath-fast-indexer@truthquranacademy.iam.gserviceaccount.com",
+  googlePrivateKey: "",
+  googleJsonConfig: "",
+  indexNowKey: "4a8e2bc9d17f4019a58b43f9a721b06c",
+  dailyQuotaUsed: 4,
+  dailyQuotaTotal: 200
+};
 
 export const DEFAULT_AI_SETTINGS: AISettings = {
   defaultProvider: "gemini",
@@ -452,21 +469,21 @@ export const DEFAULT_INTEGRATIONS = {
 };
 
 export const DEFAULT_ANALYTICS = {
-  totalVisitors: 12450,
-  uniqueVisitors: 8900,
-  returningVisitors: 3550,
-  pageViews: 42100,
-  sessions: 15800,
-  avgSessionDuration: "4m 12s",
-  bounceRate: "38.5%",
-  realTimeVisitors: 42
+  totalVisitors: 0,
+  uniqueVisitors: 0,
+  returningVisitors: 0,
+  pageViews: 0,
+  sessions: 0,
+  avgSessionDuration: "0m 00s",
+  bounceRate: "0.0%",
+  realTimeVisitors: 0
 };
 
 export const DEFAULT_SEARCH_PERFORMANCE = {
-  totalClicks: 3240,
-  totalImpressions: 48900,
-  averageCtr: "6.63%",
-  averagePosition: 8.4
+  totalClicks: 0,
+  totalImpressions: 0,
+  averageCtr: "0.0%",
+  averagePosition: 0
 };
 
 export const DEFAULT_SEO_HEALTH = {
@@ -932,3 +949,56 @@ export const resetCMSData = (): CMSData => {
 
   return getCMSData();
 };
+
+export const submitUrlsForIndexing = async (
+  urls: string | string[],
+  action: "URL_UPDATED" | "URL_DELETED" = "URL_UPDATED",
+  services: string[] = ["google", "indexnow"]
+): Promise<{ success: boolean; message: string; logs?: IndexingLogEntry[]; quotaRemaining?: number }> => {
+  const urlList = Array.isArray(urls) ? urls : [urls];
+  try {
+    const res = await fetch("/api/indexing/submit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+        "X-WP-Admin-Token": "SECURE_WP_WPSECRET_2026"
+      },
+      body: JSON.stringify({ urls: urlList, action, services })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        success: true,
+        message: data.message || `Submitted ${urlList.length} URL(s) to Google Search Console & IndexNow.`,
+        logs: data.logs,
+        quotaRemaining: data.quotaRemaining
+      };
+    }
+    return { success: false, message: "Indexing submission failed on server." };
+  } catch (err: any) {
+    console.error("Error submitting URLs for indexing:", err);
+    return { success: false, message: err.message || "Failed to connect to indexing service." };
+  }
+};
+
+export const pingSitemaps = async (): Promise<{ success: boolean; message: string; results?: any }> => {
+  try {
+    const res = await fetch("/api/indexing/ping-sitemap", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+        "X-WP-Admin-Token": "SECURE_WP_WPSECRET_2026"
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return { success: true, message: data.message || "Sitemaps pinged to Google and Bing successfully.", results: data.results };
+    }
+    return { success: false, message: "Failed to ping sitemaps to search engines." };
+  } catch (err: any) {
+    return { success: false, message: err.message || "Network error while pinging sitemaps." };
+  }
+};
+

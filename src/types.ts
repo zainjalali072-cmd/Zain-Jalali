@@ -163,3 +163,41 @@ export interface AISettings {
     anthropic: AIProviderConfig;
   };
 }
+
+export interface IndexingLogEntry {
+  id: string;
+  timestamp: string;
+  url: string;
+  action: "URL_UPDATED" | "URL_DELETED";
+  service: "Google Indexing API" | "IndexNow (Bing)" | "Google Search Console" | "Sitemap Ping";
+  status: "success" | "pending" | "failed";
+  statusCode: number;
+  message: string;
+  latencyMs: number;
+}
+
+export interface UrlIndexStatus {
+  url: string;
+  title: string;
+  type: "page" | "post" | "course" | "category" | "tag";
+  status: "Indexed" | "Submitted" | "Pending Approval" | "Updated" | "Failed";
+  lastSubmitted?: string;
+  lastCrawled?: string;
+  googleStatus?: string;
+  indexNowStatus?: string;
+  httpCode?: number;
+}
+
+export interface IndexingSettings {
+  autoIndexPosts: boolean;
+  autoIndexCourses: boolean;
+  autoIndexPages: boolean;
+  autoPingSitemap: boolean;
+  googleServiceAccountEmail?: string;
+  googlePrivateKey?: string;
+  googleJsonConfig?: string;
+  indexNowKey?: string;
+  dailyQuotaUsed?: number;
+  dailyQuotaTotal?: number;
+  isEnabled: boolean;
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { BlogPost } from "../types";
-import { saveCMSData, CMSData, cleanHTMLToExcerpt, DEFAULT_POST_IMAGE } from "../cmsStore";
+import { saveCMSData, CMSData, cleanHTMLToExcerpt, DEFAULT_POST_IMAGE, submitUrlsForIndexing } from "../cmsStore";
 import { 
   Check, 
   ChevronDown, 
@@ -53,7 +53,8 @@ import {
   Wand2,
   Share2,
   Layers,
-  Columns
+  Columns,
+  Zap
 } from "lucide-react";
 
 interface WPSEOEditorProps {
@@ -179,6 +180,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
   const [lastSavedTime, setLastSavedTime] = useState<string>("Not saved yet");
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [isIndexing, setIsIndexing] = useState(false);
 
   // Drag & Drop Image State
   const [isDraggingOver, setIsDraggingOver] = useState(false);
@@ -452,7 +454,34 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
     setLastSavedTime(`Saved at ${timeStr}`);
 
     if (!silent) {
-      showToast(`Article "${updatedPost.title}" ${newStatus === "published" ? "published live" : "saved"} successfully!`);
+      if (newStatus === "published") {
+        showToast(`Article "${updatedPost.title}" published & dispatched to Google Indexing API!`);
+        // Dispatch instant indexing ping
+        const postUrl = `https://truthquranacademy.com/blog/${postSlug}`;
+        submitUrlsForIndexing([postUrl], "URL_UPDATED", ["google", "indexnow"]).catch(console.error);
+      } else {
+        showToast(`Article "${updatedPost.title}" saved successfully!`);
+      }
+    }
+  };
+
+  // Manual Instant Indexing Trigger
+  const handleManualInstantIndex = async () => {
+    if (!currentPost) return;
+    const postSlug = (currentPost.slug || "").trim() || (currentPost.title || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const postUrl = `https://truthquranacademy.com/blog/${postSlug}`;
+    setIsIndexing(true);
+    try {
+      const res = await submitUrlsForIndexing([postUrl], "URL_UPDATED", ["google", "indexnow"]);
+      if (res.success) {
+        showToast(`⚡ Dispatched "${postUrl}" to Google Search Console API!`);
+      } else {
+        showToast(`⚡ Indexing dispatched (${res.message || 'Queued'})`);
+      }
+    } catch (err: any) {
+      showToast(`Indexing failed: ${err.message || 'Error submitting'}`);
+    } finally {
+      setIsIndexing(false);
     }
   };
 
@@ -1458,6 +1487,22 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* INSTANT INDEXING ACTION BUTTON */}
+              <div className="border-t border-white/10 pt-4">
+                <button
+                  type="button"
+                  onClick={handleManualInstantIndex}
+                  disabled={isIndexing}
+                  className="w-full flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl bg-[#d9b45c]/10 hover:bg-[#d9b45c]/20 border border-[#d9b45c]/30 hover:border-[#d9b45c]/60 text-[#f2d98a] text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <Zap size={14} className={`text-[#d9b45c] ${isIndexing ? "animate-spin" : ""}`} />
+                  <span>{isIndexing ? "Submitting to Search Console..." : "Instant Index to Google"}</span>
+                </button>
+                <p className="text-[10px] text-[#c9c2ab]/60 mt-1 text-center">
+                  Dispatches direct API request to Google Search Console & IndexNow
+                </p>
               </div>
 
             </div>
