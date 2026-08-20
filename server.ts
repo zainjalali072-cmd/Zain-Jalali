@@ -1200,11 +1200,11 @@ app.post("/api/cms-data", csrfProtection, inputScrubber, (req, res) => {
   if (indexingSettings.isEnabled) {
     // Detect new or updated posts
     if (indexingSettings.autoIndexPosts && Array.isArray(updatedData.blogPosts)) {
-      const oldPostsMap = new Map((db.blogPosts || []).map((p: any) => [p.id, p]));
+      const oldPostsMap = new Map<string, any>((db.blogPosts || []).map((p: any) => [p.id, p]));
       updatedData.blogPosts.forEach((post: any) => {
         if (!post) return;
         const slug = post.slug || post.id;
-        const old = oldPostsMap.get(post.id);
+        const old: any = oldPostsMap.get(post.id);
         const postUrl = `${domain}/blog/${slug}`;
         if (!old) {
           // Newly created post
@@ -1223,10 +1223,10 @@ app.post("/api/cms-data", csrfProtection, inputScrubber, (req, res) => {
 
     // Detect new or updated courses
     if (indexingSettings.autoIndexCourses && Array.isArray(updatedData.courses)) {
-      const oldCoursesMap = new Map((db.courses || []).map((c: any) => [c.id, c]));
+      const oldCoursesMap = new Map<string, any>((db.courses || []).map((c: any) => [c.id, c]));
       updatedData.courses.forEach((course: any) => {
         if (!course) return;
-        const old = oldCoursesMap.get(course.id);
+        const old: any = oldCoursesMap.get(course.id);
         const courseUrl = `${domain}/${course.id}`;
         if (!old || old.title !== course.title || old.description !== course.description) {
           autoIndexUrls.push(courseUrl);

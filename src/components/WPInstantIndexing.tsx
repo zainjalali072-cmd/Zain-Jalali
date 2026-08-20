@@ -22,8 +22,8 @@ import {
   Check,
   Copy
 } from "lucide-react";
-import { IndexingLogEntry, UrlIndexStatus, IndexingSettings, CMSData } from "../types";
-import { submitUrlsForIndexing, pingSitemaps } from "../cmsStore";
+import { IndexingLogEntry, UrlIndexStatus, IndexingSettings } from "../types";
+import { CMSData, submitUrlsForIndexing, pingSitemaps } from "../cmsStore";
 
 interface WPInstantIndexingProps {
   cmsData: CMSData;

@@ -496,18 +496,20 @@ export default function BlogSection({
         {/* ARTICLE CONTENT CONTAINER (OPTIMIZED FOR READABILITY: ~750-850PX) */}
         <div className="max-w-[820px] mx-auto space-y-6">
           <div 
-            className="prose prose-invert max-w-none text-sm md:text-base text-[#c9c2ab] leading-relaxed font-sans
-              [&>h2]:font-serif [&>h2]:text-2xl [&>h2]:md:text-3xl [&>h2]:text-[#f3ecd8] [&>h2]:font-semibold [&>h2]:mt-10 [&>h2]:mb-4 [&>h2]:border-b [&>h2]:border-[#d9b45c]/20 [&>h2]:pb-2
-              [&>h3]:font-serif [&>h3]:text-xl [&>h3]:md:text-2xl [&>h3]:text-[#f2d98a] [&>h3]:font-medium [&>h3]:mt-8 [&>h3]:mb-3
+            className="prose prose-invert max-w-none text-sm md:text-base text-[#FFFFFF] leading-relaxed font-sans
+              [&>h1]:font-serif [&>h1]:text-3xl [&>h1]:md:text-4xl [&>h1]:text-[#FFFFFF] [&>h1]:font-bold [&>h1]:mt-8 [&>h1]:mb-4
+              [&>h2]:font-serif [&>h2]:text-2xl [&>h2]:md:text-3xl [&>h2]:text-[#FFFFFF] [&>h2]:font-bold [&>h2]:mt-10 [&>h2]:mb-4 [&>h2]:border-b [&>h2]:border-[#d9b45c]/25 [&>h2]:pb-2
+              [&>h3]:font-serif [&>h3]:text-xl [&>h3]:md:text-2xl [&>h3]:text-[#f2d98a] [&>h3]:font-semibold [&>h3]:mt-8 [&>h3]:mb-3
               [&>h4]:font-serif [&>h4]:text-lg [&>h4]:text-[#f3ecd8] [&>h4]:font-medium [&>h4]:mt-6 [&>h4]:mb-2
-              [&>p]:mb-6 [&>p]:leading-relaxed
-              [&>ul]:my-6 [&>ul]:pl-6 [&>ul]:space-y-2 [&>ul>li]:list-disc [&>ul>li]:marker:text-[#d9b45c]
-              [&>ol]:my-6 [&>ol]:pl-6 [&>ol]:space-y-2 [&>ol>li]:list-decimal [&>ol>li]:marker:text-[#d9b45c]
-              [&>blockquote]:my-8 [&>blockquote]:p-6 [&>blockquote]:bg-[#12141b] [&>blockquote]:border-l-4 [&>blockquote]:border-[#d9b45c] [&>blockquote]:italic [&>blockquote]:text-[#f3ecd8] [&>blockquote]:rounded-r-2xl [&>blockquote]:font-serif
-              [&>a]:text-[#d9b45c] [&>a]:underline [&>a]:hover:text-[#f2d98a]
+              [&>p]:mb-6 [&>p]:leading-relaxed [&>p]:text-[#F3F4F6]
+              [&>ul]:my-6 [&>ul]:pl-6 [&>ul]:space-y-2 [&>ul>li]:list-disc [&>ul>li]:marker:text-[#d9b45c] [&>ul>li]:text-[#F3F4F6]
+              [&>ol]:my-6 [&>ol]:pl-6 [&>ol]:space-y-2 [&>ol>li]:list-decimal [&>ol>li]:marker:text-[#d9b45c] [&>ol>li]:text-[#F3F4F6]
+              [&>blockquote]:my-8 [&>blockquote]:p-6 [&>blockquote]:bg-[#12141b] [&>blockquote]:border-l-4 [&>blockquote]:border-[#d9b45c] [&>blockquote]:italic [&>blockquote]:text-[#f2d98a] [&>blockquote]:rounded-r-2xl [&>blockquote]:font-serif
+              [&>a]:text-[#FACC15] [&>a]:underline [&>a]:hover:text-[#EAB308] [&>a]:font-semibold
+              [&_a]:text-[#FACC15] [&_a]:underline [&_a]:hover:text-[#EAB308] [&_a]:font-semibold
               [&>table]:w-full [&>table]:my-8 [&>table]:border-collapse [&>table]:border [&>table]:border-[#d9b45c]/20 [&>table]:text-xs [&>table]:md:text-sm
               [&>table_th]:bg-[#12141b] [&>table_th]:text-[#f2d98a] [&>table_th]:p-3 [&>table_th]:border [&>table_th]:border-[#d9b45c]/20 [&>table_th]:font-bold
-              [&>table_td]:p-3 [&>table_td]:border [&>table_td]:border-[#d9b45c]/10 [&>table_td]:text-[#c9c2ab]
+              [&>table_td]:p-3 [&>table_td]:border [&>table_td]:border-[#d9b45c]/10 [&>table_td]:text-[#F3F4F6]
               [&>pre]:bg-[#07080b] [&>pre]:p-4 [&>pre]:rounded-xl [&>pre]:text-[#f2d98a] [&>pre]:font-mono [&>pre]:text-xs [&>pre]:overflow-x-auto [&>pre]:border [&>pre]:border-white/10"
             dangerouslySetInnerHTML={{ __html: post.content || "<p>No article content provided for this post.</p>" }}
           />

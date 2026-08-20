@@ -90,7 +90,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
       id: `post-${Date.now()}`,
       title: "",
       excerpt: "",
-      content: "<p>Start writing your article here...</p>",
+      content: "",
       category: "Tajweed Rules",
       coverImage: "",
       featuredImage: "",
@@ -100,10 +100,17 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
         role: "Senior Quran Scholar"
       },
       date: today,
-      readTime: "5 min read",
-      tags: ["Tajweed Rules"],
+      readTime: "1 min read",
+      tags: [],
       status: "published",
-      slug: "new-article"
+      slug: "",
+      metaTitle: "",
+      metaDescription: "",
+      focusKeyword: "",
+      robotsMeta: "index, follow",
+      imageAltText: "",
+      imageTitle: "",
+      imageCaption: ""
     };
   });
 
@@ -114,7 +121,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
         id: `post-${Date.now()}`,
         title: "",
         excerpt: "",
-        content: "<p>Start writing your article here...</p>",
+        content: "",
         category: "Tajweed Rules",
         coverImage: "",
         featuredImage: "",
@@ -124,10 +131,17 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
           role: "Senior Quran Scholar"
         },
         date: today,
-        readTime: "5 min read",
-        tags: ["Tajweed Rules"],
+        readTime: "1 min read",
+        tags: [],
         status: "published",
-        slug: "new-article"
+        slug: "",
+        metaTitle: "",
+        metaDescription: "",
+        focusKeyword: "",
+        robotsMeta: "index, follow",
+        imageAltText: "",
+        imageTitle: "",
+        imageCaption: ""
       });
     } else if (activePost) {
       setCurrentPost({
@@ -144,7 +158,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
           avatar: activePost.author?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80",
           role: activePost.author?.role || "Senior Quran Scholar"
         },
-        tags: activePost.tags || ["Tajweed Rules"],
+        tags: activePost.tags || [],
         metaTitle: activePost.metaTitle || activePost.title || "",
         metaDescription: activePost.metaDescription || activePost.excerpt || "",
         focusKeyword: activePost.focusKeyword || "",
@@ -170,6 +184,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
   const [deviceFrame, setDeviceFrame] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const [editorMode, setEditorMode] = useState<"visual" | "code">("visual");
   const [viewLayoutMode, setViewLayoutMode] = useState<"editor" | "split" | "preview">("editor");
+  const [snippetDevice, setSnippetDevice] = useState<"desktop" | "mobile">("desktop");
 
   // Right Sidebar Active Tab ("seo" | "publish")
   const [activeSidebarTab, setActiveSidebarTab] = useState<"seo" | "publish">("seo");
@@ -514,13 +529,17 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
       },
       date: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
       readTime: "1 min read",
-      tags: ["Tajweed Rules"],
-      content: "<p>Start writing your article here...</p>",
+      tags: [],
+      content: "",
       status: "draft",
       metaTitle: "",
       metaDescription: "",
       focusKeyword: "",
-      slug: "new-article"
+      slug: "",
+      robotsMeta: "index, follow",
+      imageAltText: "",
+      imageTitle: "",
+      imageCaption: ""
     };
 
     const updatedCMSData = {
@@ -877,23 +896,28 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
         </div>
       </header>
 
-      {/* 2. MAIN CONTAINER GRID (LEFT EDITING CANVAS + RIGHT COLLAPSIBLE SIDEBAR) */}
-      <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {/* 2. MAIN CONTAINER GRID (LEFT EDITING CANVAS + RIGHT STICKY SIDEBAR) */}
+      <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* LEFT COLUMN: MAIN CONTENT EDITING CANVAS (LG: COL-SPAN-8) */}
         <main className="lg:col-span-8 space-y-6">
           
           {/* ARTICLE TITLE FIELD */}
           <div className="bg-[#12141b] border border-[#d9b45c]/20 rounded-2xl p-6 shadow-2xl space-y-3">
-            <label className="text-[10px] font-extrabold uppercase tracking-widest text-[#d9b45c]">
-              Article Post Title
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-extrabold uppercase tracking-widest text-[#d9b45c]">
+                Article Post Title
+              </label>
+              <span className="text-[10px] font-mono text-[#c9c2ab]/70">
+                {(currentPost.title || "").length} chars
+              </span>
+            </div>
             <input
               type="text"
               value={currentPost.title}
               onChange={(e) => handleUpdateField("title", e.target.value)}
-              placeholder="Add article title (e.g. Essential Tajweed Rules for Beginners)..."
-              className="w-full text-xl md:text-3xl font-serif font-bold text-white bg-transparent border-b border-white/10 hover:border-white/20 focus:border-[#d9b45c] pb-2 outline-none placeholder-white/20 transition-all"
+              placeholder="Add title"
+              className="w-full text-xl md:text-2xl font-serif font-bold text-white bg-transparent border-b border-white/10 hover:border-white/20 focus:border-[#d9b45c] pb-2.5 outline-none placeholder-white/30 transition-all tracking-tight"
             />
 
             {/* PERMALINK / URL SLUG BAR */}
@@ -904,13 +928,15 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                   type="text"
                   value={currentPost.slug}
                   onChange={(e) => handleUpdateField("slug", e.target.value.toLowerCase().replace(/\s+/g, "-"))}
+                  placeholder="post-slug"
                   className="bg-transparent text-[#f2d98a] font-bold outline-none border-b border-transparent focus:border-[#d9b45c]"
                 />
               </div>
               <button
                 type="button"
                 onClick={() => {
-                  navigator.clipboard.writeText(`https://truthquranacademy.com/blog/${currentPost.slug}`);
+                  const fullUrl = `https://truthquranacademy.com/blog/${currentPost.slug || "article"}`;
+                  navigator.clipboard.writeText(fullUrl);
                   showToast("Article URL copied to clipboard!");
                 }}
                 className="mt-2 sm:mt-0 px-2.5 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] flex items-center space-x-1 text-[#f2d98a]"
@@ -931,16 +957,19 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
               <select
                 onChange={(e) => {
                   const val = e.target.value;
-                  if (val === "p") applyFormattingToSelection("<p class='my-4 text-xs md:text-sm text-[#c9c2ab] leading-relaxed'>", "</p>");
-                  else if (val) applyFormattingToSelection(`<${val} class='font-serif font-bold text-white text-xl my-4'>`, `</${val}>`);
+                  if (val === "p") applyFormattingToSelection("<p class='my-4 leading-relaxed text-[#F3F4F6]'>", "</p>");
+                  else if (val === "h1") applyFormattingToSelection("<h1 class='font-serif font-bold text-2xl md:text-3xl text-white my-6'>", "</h1>");
+                  else if (val === "h2") applyFormattingToSelection("<h2 class='font-serif font-bold text-xl md:text-2xl text-white border-b border-[#d9b45c]/25 pb-2 my-6'>", "</h2>");
+                  else if (val === "h3") applyFormattingToSelection("<h3 class='font-serif font-semibold text-lg md:text-xl text-[#f2d98a] my-5'>", "</h3>");
+                  else if (val === "h4") applyFormattingToSelection("<h4 class='font-serif font-medium text-base md:text-lg text-[#f3ecd8] my-4'>", "</h4>");
                 }}
-                className="bg-[#12141b] text-xs font-bold text-[#f2d98a] border border-[#d9b45c]/30 rounded-lg px-2.5 py-1.5 outline-none"
+                className="bg-[#12141b] text-xs font-bold text-[#f2d98a] border border-[#d9b45c]/30 rounded-lg px-2.5 py-1.5 outline-none cursor-pointer"
               >
                 <option value="p">Paragraph</option>
-                <option value="h1">Heading 1</option>
-                <option value="h2">Heading 2</option>
-                <option value="h3">Heading 3</option>
-                <option value="h4">Heading 4</option>
+                <option value="h1">Heading 1 (H1)</option>
+                <option value="h2">Heading 2 (H2)</option>
+                <option value="h3">Heading 3 (H3)</option>
+                <option value="h4">Heading 4 (H4)</option>
               </select>
 
               <div className="h-5 w-[1px] bg-white/10 my-auto"></div>
@@ -950,7 +979,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                 type="button"
                 onClick={() => applyFormattingToSelection("<strong>", "</strong>")}
                 className="p-1.5 bg-white/5 hover:bg-white/10 text-[#c9c2ab] hover:text-white rounded-lg"
-                title="Bold"
+                title="Bold (Ctrl+B)"
               >
                 <Bold size={14} />
               </button>
@@ -958,7 +987,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                 type="button"
                 onClick={() => applyFormattingToSelection("<em>", "</em>")}
                 className="p-1.5 bg-white/5 hover:bg-white/10 text-[#c9c2ab] hover:text-white rounded-lg"
-                title="Italic"
+                title="Italic (Ctrl+I)"
               >
                 <Italic size={14} />
               </button>
@@ -966,7 +995,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                 type="button"
                 onClick={() => applyFormattingToSelection("<u>", "</u>")}
                 className="p-1.5 bg-white/5 hover:bg-white/10 text-[#c9c2ab] hover:text-white rounded-lg"
-                title="Underline"
+                title="Underline (Ctrl+U)"
               >
                 <Underline size={14} />
               </button>
@@ -976,7 +1005,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
               {/* Lists & Quotes */}
               <button
                 type="button"
-                onClick={() => applyFormattingToSelection("<ul class='list-disc list-inside space-y-2 my-4 text-xs text-[#c9c2ab]'><li>", "</li></ul>")}
+                onClick={() => applyFormattingToSelection("<ul class='list-disc pl-5 space-y-1.5 my-4 text-[#F3F4F6] marker:text-[#d9b45c]'><li>", "</li></ul>")}
                 className="p-1.5 bg-white/5 hover:bg-white/10 text-[#c9c2ab] hover:text-white rounded-lg"
                 title="Bullet List"
               >
@@ -984,7 +1013,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
               </button>
               <button
                 type="button"
-                onClick={() => applyFormattingToSelection("<ol class='list-decimal list-inside space-y-2 my-4 text-xs text-[#c9c2ab]'><li>", "</li></ol>")}
+                onClick={() => applyFormattingToSelection("<ol class='list-decimal pl-5 space-y-1.5 my-4 text-[#F3F4F6] marker:text-[#d9b45c]'><li>", "</li></ol>")}
                 className="p-1.5 bg-white/5 hover:bg-white/10 text-[#c9c2ab] hover:text-white rounded-lg"
                 title="Numbered List"
               >
@@ -994,22 +1023,24 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                 type="button"
                 onClick={() => applyFormattingToSelection("<blockquote class='border-l-4 border-[#d9b45c] bg-[#12141b] p-4 my-6 rounded-r-xl italic text-[#f2d98a]'>", "</blockquote>")}
                 className="p-1.5 bg-white/5 hover:bg-white/10 text-[#c9c2ab] hover:text-white rounded-lg"
-                title="Quote"
+                title="Quote Block"
               >
                 <Quote size={14} />
               </button>
 
               <div className="h-5 w-[1px] bg-white/10 my-auto"></div>
 
-              {/* Link, Table, Image, Code, HR */}
+              {/* Link (Golden Anchor Tag), Table, Image, HR */}
               <button
                 type="button"
                 onClick={() => {
                   const url = prompt("Enter Link URL:", "https://");
-                  if (url) applyFormattingToSelection(`<a href="${url}" target="_blank" class="text-[#f2d98a] underline font-bold">`, "</a>");
+                  if (url) {
+                    applyFormattingToSelection(`<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-[#FACC15] underline hover:text-[#EAB308] font-semibold">`, "</a>");
+                  }
                 }}
                 className="p-1.5 bg-white/5 hover:bg-white/10 text-[#c9c2ab] hover:text-white rounded-lg"
-                title="Insert Link"
+                title="Insert Hyperlink (Gold #FACC15)"
               >
                 <Link2 size={14} />
               </button>
@@ -1036,7 +1067,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                 type="button"
                 onClick={() => applyFormattingToSelection("<hr class='border-[#d9b45c]/30 my-8' />", "")}
                 className="p-1.5 bg-white/5 hover:bg-white/10 text-[#c9c2ab] hover:text-white rounded-lg"
-                title="Horizontal Line"
+                title="Horizontal Rule"
               >
                 <Minus size={14} />
               </button>
@@ -1065,17 +1096,39 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
 
               <div className="flex-1"></div>
 
-              {/* VIEW LAYOUT MODE SELECTOR (Editor / Split Live Preview / Full Live View) */}
+              {/* DIRECT VISUAL / CODE (HTML) / SPLIT / PREVIEW SWITCHERS */}
               <div className="flex items-center space-x-1 bg-[#12141b] border border-[#d9b45c]/30 rounded-xl p-1">
                 <button
                   type="button"
-                  onClick={() => setViewLayoutMode("editor")}
-                  className={`px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-lg transition-all ${
-                    viewLayoutMode === "editor" ? "bg-[#d9b45c] text-black shadow-sm" : "text-[#c9c2ab] hover:text-white"
+                  onClick={() => {
+                    setViewLayoutMode("editor");
+                    setEditorMode("visual");
+                  }}
+                  className={`px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-lg transition-all flex items-center space-x-1 ${
+                    viewLayoutMode === "editor" && editorMode === "visual"
+                      ? "bg-[#d9b45c] text-black shadow-sm"
+                      : "text-[#c9c2ab] hover:text-white"
                   }`}
-                  title="Standard Writing Editor"
+                  title="Visual WYSIWYG Editor"
                 >
-                  Editor
+                  <Eye size={12} />
+                  <span>Visual</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewLayoutMode("editor");
+                    setEditorMode("code");
+                  }}
+                  className={`px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-lg transition-all flex items-center space-x-1 ${
+                    viewLayoutMode === "editor" && editorMode === "code"
+                      ? "bg-[#d9b45c] text-black shadow-sm"
+                      : "text-[#c9c2ab] hover:text-white"
+                  }`}
+                  title="Raw HTML Code Editor"
+                >
+                  <FileCode size={12} />
+                  <span>Code (HTML)</span>
                 </button>
                 <button
                   type="button"
@@ -1086,7 +1139,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                   title="Side-by-Side Live Preview"
                 >
                   <Columns size={12} />
-                  <span>Split Live Preview</span>
+                  <span>Split</span>
                 </button>
                 <button
                   type="button"
@@ -1094,10 +1147,10 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                   className={`px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-lg transition-all flex items-center space-x-1 ${
                     viewLayoutMode === "preview" ? "bg-[#d9b45c] text-black shadow-sm" : "text-[#c9c2ab] hover:text-white"
                   }`}
-                  title="Live Article View"
+                  title="Full Live Article Preview"
                 >
-                  <Eye size={12} />
-                  <span>Full Live View</span>
+                  <Globe size={12} />
+                  <span>Live View</span>
                 </button>
               </div>
 
@@ -1116,11 +1169,11 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
             {/* MAIN CONTENT CANVAS / SIDE-BY-SIDE SPLIT PREVIEW */}
             {viewLayoutMode === "preview" ? (
               /* FULL LIVE ARTICLE PREVIEW */
-              <div className="p-6 bg-[#07080b] border border-[#d9b45c]/20 rounded-b-2xl space-y-6 max-h-[600px] overflow-y-auto">
+              <div className="p-6 bg-[#07080b] border border-[#d9b45c]/20 rounded-b-2xl space-y-6 max-h-[650px] overflow-y-auto">
                 <div className="border-b border-white/10 pb-4">
                   <span className="text-[10px] font-bold text-[#d9b45c] uppercase tracking-wider">{currentPost.category || "Tajweed Rules"}</span>
-                  <h1 className="text-2xl md:text-3xl font-serif font-bold text-[#f3ecd8] mt-1">{currentPost.title || "Untitled Article"}</h1>
-                  <p className="text-xs text-[#c9c2ab] mt-2 italic">{currentPost.excerpt || cleanHTMLToExcerpt(currentPost.content, "")}</p>
+                  <h1 className="text-2xl md:text-3xl font-serif font-bold text-white mt-1">{currentPost.title || "Untitled Article"}</h1>
+                  <p className="text-xs text-[#F3F4F6]/70 mt-2 italic">{currentPost.excerpt || cleanHTMLToExcerpt(currentPost.content, "")}</p>
                 </div>
                 {(currentPost.coverImage || currentPost.featuredImage) && (
                   <img
@@ -1130,13 +1183,17 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                   />
                 )}
                 <div
-                  className="prose prose-invert max-w-none text-xs md:text-sm text-[#c9c2ab] leading-relaxed font-sans
-                    [&>h2]:font-serif [&>h2]:text-xl [&>h2]:text-[#f3ecd8] [&>h2]:font-bold [&>h2]:mt-6 [&>h2]:mb-3
-                    [&>h3]:font-serif [&>h3]:text-lg [&>h3]:text-[#f2d98a] [&>h3]:font-semibold [&>h3]:mt-5 [&>h3]:mb-2
-                    [&>p]:mb-4 [&>p]:leading-relaxed
-                    [&>ul]:my-4 [&>ul]:pl-5 [&>ul]:space-y-1 [&>ul>li]:list-disc [&>ul>li]:marker:text-[#d9b45c]
-                    [&>ol]:my-4 [&>ol]:pl-5 [&>ol]:space-y-1 [&>ol>li]:list-decimal [&>ol>li]:marker:text-[#d9b45c]
-                    [&>blockquote]:my-6 [&>blockquote]:p-4 [&>blockquote]:bg-[#12141b] [&>blockquote]:border-l-4 [&>blockquote]:border-[#d9b45c] [&>blockquote]:italic [&>blockquote]:text-[#f2d98a] [&>blockquote]:rounded-r-xl"
+                  className="prose prose-invert max-w-none text-xs md:text-sm text-[#F3F4F6] leading-relaxed font-sans
+                    [&>h1]:font-serif [&>h1]:text-2xl [&>h1]:md:text-3xl [&>h1]:text-white [&>h1]:font-bold [&>h1]:mt-6 [&>h1]:mb-3
+                    [&>h2]:font-serif [&>h2]:text-xl [&>h2]:md:text-2xl [&>h2]:text-white [&>h2]:font-bold [&>h2]:border-b [&>h2]:border-[#d9b45c]/25 [&>h2]:pb-2 [&>h2]:mt-6 [&>h2]:mb-3
+                    [&>h3]:font-serif [&>h3]:text-lg [&>h3]:md:text-xl [&>h3]:text-[#f2d98a] [&>h3]:font-semibold [&>h3]:mt-5 [&>h3]:mb-2
+                    [&>h4]:font-serif [&>h4]:text-base [&>h4]:md:text-lg [&>h4]:text-[#f3ecd8] [&>h4]:font-medium [&>h4]:mt-4 [&>h4]:mb-2
+                    [&>p]:mb-4 [&>p]:leading-relaxed [&>p]:text-[#F3F4F6]
+                    [&>ul]:my-4 [&>ul]:pl-5 [&>ul]:space-y-1.5 [&>ul>li]:list-disc [&>ul>li]:marker:text-[#d9b45c] [&>ul>li]:text-[#F3F4F6]
+                    [&>ol]:my-4 [&>ol]:pl-5 [&>ol]:space-y-1.5 [&>ol>li]:list-decimal [&>ol>li]:marker:text-[#d9b45c] [&>ol>li]:text-[#F3F4F6]
+                    [&>blockquote]:my-6 [&>blockquote]:p-4 [&>blockquote]:bg-[#12141b] [&>blockquote]:border-l-4 [&>blockquote]:border-[#d9b45c] [&>blockquote]:italic [&>blockquote]:text-[#f2d98a] [&>blockquote]:rounded-r-xl
+                    [&>a]:text-[#FACC15] [&>a]:underline [&>a]:hover:text-[#EAB308] [&>a]:font-semibold
+                    [&_a]:text-[#FACC15] [&_a]:underline [&_a]:hover:text-[#EAB308] [&_a]:font-semibold"
                   dangerouslySetInnerHTML={{ __html: currentPost.content || "<p class='text-gray-500 italic'>No content written yet.</p>" }}
                 />
               </div>
@@ -1166,19 +1223,19 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                       handleUpdateField("content", e.target.value);
                       pushHistory(e.target.value);
                     }}
-                    placeholder="Write article content here..."
-                    rows={20}
-                    className="w-full bg-transparent text-xs md:text-sm text-[#c9c2ab] font-mono leading-relaxed p-2 outline-none resize-y"
+                    placeholder="Write article content in English or HTML..."
+                    rows={22}
+                    className="w-full bg-transparent text-xs md:text-sm text-white font-mono leading-relaxed p-2 outline-none resize-y"
                   ></textarea>
                 </div>
 
                 {/* RIGHT: REAL-TIME LIVE RENDERED PREVIEW */}
-                <div className="p-4 bg-[#0e1017]/80 overflow-y-auto max-h-[550px] space-y-4">
+                <div className="p-4 bg-[#0e1017]/80 overflow-y-auto max-h-[580px] space-y-4">
                   <div className="flex items-center justify-between border-b border-white/10 pb-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#d9b45c]">Real-time Live Preview</span>
                     <span className="text-[10px] font-mono text-[#c9c2ab]">Truth Quran Theme</span>
                   </div>
-                  <h2 className="text-lg font-serif font-bold text-[#f3ecd8]">{currentPost.title || "Article Title Preview"}</h2>
+                  <h2 className="text-lg font-serif font-bold text-white">{currentPost.title || "Article Title Preview"}</h2>
                   {(currentPost.coverImage || currentPost.featuredImage) && (
                     <img
                       src={currentPost.coverImage || currentPost.featuredImage}
@@ -1187,18 +1244,23 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                     />
                   )}
                   <div
-                    className="prose prose-invert max-w-none text-xs text-[#c9c2ab] leading-relaxed font-sans
-                      [&>h2]:font-serif [&>h2]:text-base [&>h2]:text-[#f3ecd8] [&>h2]:font-bold [&>h2]:mt-4 [&>h2]:mb-2
+                    className="prose prose-invert max-w-none text-xs text-[#F3F4F6] leading-relaxed font-sans
+                      [&>h1]:font-serif [&>h1]:text-xl [&>h1]:text-white [&>h1]:font-bold [&>h1]:mt-4 [&>h1]:mb-2
+                      [&>h2]:font-serif [&>h2]:text-base [&>h2]:text-white [&>h2]:font-bold [&>h2]:border-b [&>h2]:border-[#d9b45c]/20 [&>h2]:pb-1 [&>h2]:mt-4 [&>h2]:mb-2
                       [&>h3]:font-serif [&>h3]:text-sm [&>h3]:text-[#f2d98a] [&>h3]:font-semibold [&>h3]:mt-3 [&>h3]:mb-1
-                      [&>p]:mb-3
-                      [&>ul]:my-3 [&>ul]:pl-4 [&>ul>li]:list-disc [&>ul>li]:marker:text-[#d9b45c]
-                      [&>blockquote]:my-4 [&>blockquote]:p-3 [&>blockquote]:bg-[#12141b] [&>blockquote]:border-l-2 [&>blockquote]:border-[#d9b45c] [&>blockquote]:italic [&>blockquote]:text-[#f2d98a]"
+                      [&>h4]:font-serif [&>h4]:text-xs [&>h4]:text-[#f3ecd8] [&>h4]:font-medium [&>h4]:mt-2 [&>h4]:mb-1
+                      [&>p]:mb-3 [&>p]:text-[#F3F4F6]
+                      [&>ul]:my-3 [&>ul]:pl-4 [&>ul>li]:list-disc [&>ul>li]:marker:text-[#d9b45c] [&>ul>li]:text-[#F3F4F6]
+                      [&>ol]:my-3 [&>ol]:pl-4 [&>ol>li]:list-decimal [&>ol>li]:marker:text-[#d9b45c] [&>ol>li]:text-[#F3F4F6]
+                      [&>blockquote]:my-4 [&>blockquote]:p-3 [&>blockquote]:bg-[#12141b] [&>blockquote]:border-l-2 [&>blockquote]:border-[#d9b45c] [&>blockquote]:italic [&>blockquote]:text-[#f2d98a]
+                      [&>a]:text-[#FACC15] [&>a]:underline [&>a]:hover:text-[#EAB308] [&>a]:font-semibold
+                      [&_a]:text-[#FACC15] [&_a]:underline [&_a]:hover:text-[#EAB308] [&_a]:font-semibold"
                     dangerouslySetInnerHTML={{ __html: currentPost.content || "<p class='text-gray-500 italic'>Type on the left to see live preview...</p>" }}
                   />
                 </div>
               </div>
-            ) : (
-              /* STANDARD EDITOR MODE */
+            ) : editorMode === "code" ? (
+              /* RAW HTML CODE EDITOR MODE */
               <div
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -1215,7 +1277,11 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                   </div>
                 )}
 
-                {/* VISUAL / HTML CONTENT TEXTAREA */}
+                <div className="flex items-center justify-between text-[10px] text-[#d9b45c] font-mono pb-2 border-b border-white/5">
+                  <span>HTML Source Editor (Preserves All Tags)</span>
+                  <span className="text-white/40">UTF-8 / Raw Markup</span>
+                </div>
+
                 <textarea
                   id="gutenberg-content-textarea"
                   value={currentPost.content}
@@ -1223,23 +1289,55 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                     handleUpdateField("content", e.target.value);
                     pushHistory(e.target.value);
                   }}
-                  placeholder="Write your English article content here..."
-                  rows={18}
-                  className="w-full bg-transparent text-xs md:text-sm text-[#c9c2ab] font-mono leading-relaxed p-2 outline-none resize-y"
+                  placeholder="<h2>Article Subheading</h2><p>Write your HTML or formatted English article here...</p>"
+                  rows={20}
+                  className="w-full bg-transparent text-xs md:text-sm text-emerald-300 font-mono leading-relaxed p-2 outline-none resize-y"
+                ></textarea>
+              </div>
+            ) : (
+              /* VISUAL EDITOR MODE */
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDraggingOver(true);
+                }}
+                onDragLeave={() => setIsDraggingOver(false)}
+                onDrop={handleFileDrop}
+                className={`relative p-5 transition-all ${isDraggingOver ? "bg-[#d9b45c]/10 ring-2 ring-[#d9b45c]" : "bg-[#07080b]"}`}
+              >
+                {isDraggingOver && (
+                  <div className="absolute inset-0 z-30 bg-[#0e1017]/90 backdrop-blur-sm flex flex-col items-center justify-center border-2 border-dashed border-[#d9b45c] rounded-xl text-[#f2d98a]">
+                    <Upload size={36} className="animate-bounce" />
+                    <p className="mt-2 text-sm font-bold">Drop Image to Upload & Insert into Article</p>
+                  </div>
+                )}
+
+                {/* TEXTAREA WITH DYNAMIC TYPOGRAPHY */}
+                <textarea
+                  id="gutenberg-content-textarea"
+                  value={currentPost.content}
+                  onChange={(e) => {
+                    handleUpdateField("content", e.target.value);
+                    pushHistory(e.target.value);
+                  }}
+                  placeholder="Start writing your article here..."
+                  rows={20}
+                  className="w-full bg-transparent text-xs md:text-sm text-[#F3F4F6] font-sans leading-relaxed p-2 outline-none resize-y"
                 ></textarea>
               </div>
             )}
 
             {/* STATS BAR BELOW CANVAS */}
-            <div className="bg-[#0e1017] border-t border-white/10 px-4 py-2 flex flex-wrap items-center justify-between text-[11px] text-[#c9c2ab]/80 font-mono">
+            <div className="bg-[#0e1017] border-t border-white/10 px-4 py-2.5 flex flex-wrap items-center justify-between text-[11px] text-[#c9c2ab]/80 font-mono">
               <div className="flex items-center space-x-4">
-                <span><strong>{contentStats.words}</strong> words</span>
-                <span><strong>{contentStats.chars}</strong> chars</span>
-                <span><strong>{contentStats.sentences}</strong> sentences</span>
-                <span><strong>{contentStats.readingTime}</strong></span>
+                <span><strong className="text-white">{contentStats.words}</strong> words</span>
+                <span><strong className="text-white">{contentStats.chars}</strong> chars</span>
+                <span><strong className="text-white">{contentStats.sentences}</strong> sentences</span>
+                <span className="text-[#f2d98a] font-bold">{contentStats.readingTime}</span>
               </div>
-              <div className="text-[#d9b45c] font-bold">
-                {isAutoSaving ? "Auto-saving..." : "Auto-save Active"}
+              <div className="text-[#d9b45c] font-bold flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>{isAutoSaving ? "Auto-saving..." : "Auto-save Active"}</span>
               </div>
             </div>
 
@@ -1363,8 +1461,8 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
 
         </main>
 
-        {/* RIGHT COLUMN: COLLAPSIBLE SIDEBAR (LG: COL-SPAN-4) */}
-        <aside className="lg:col-span-4 space-y-6">
+        {/* RIGHT COLUMN: STICKY SIDEBAR (LG: COL-SPAN-4) */}
+        <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-20">
           
           {/* TAB SWITCHER HEADER */}
           <div className="bg-[#12141b] border border-[#d9b45c]/30 rounded-2xl p-1.5 flex items-center shadow-xl">
@@ -1386,7 +1484,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
             </button>
           </div>
 
-          {/* TAB 1: RANK MATH SEO PANEL */}
+          {/* TAB 1: RANK MATH SEO PRO PANEL */}
           {activeSidebarTab === "seo" && (
             <div className="bg-[#12141b] border border-[#d9b45c]/20 rounded-2xl p-6 shadow-2xl space-y-6 animate-in fade-in duration-200">
               
@@ -1402,6 +1500,47 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                   "border-red-500 text-red-400 bg-red-500/10"
                 }`}>
                   {seoAnalysis.score}%
+                </div>
+              </div>
+
+              {/* GOOGLE SERP SNIPPET PREVIEW (AUTHENTIC SEARCH ENGINE MOCKUP) */}
+              <div className="p-4 bg-[#07080b] rounded-2xl border border-white/10 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#d9b45c]">
+                    Google SERP Snippet Preview
+                  </span>
+                  <div className="flex items-center space-x-1 bg-white/5 rounded-lg p-0.5 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => setSnippetDevice("desktop")}
+                      className={`px-2 py-0.5 rounded ${snippetDevice === "desktop" ? "bg-[#d9b45c] text-black font-bold" : "text-[#c9c2ab]"}`}
+                    >
+                      Desktop
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSnippetDevice("mobile")}
+                      className={`px-2 py-0.5 rounded ${snippetDevice === "mobile" ? "bg-[#d9b45c] text-black font-bold" : "text-[#c9c2ab]"}`}
+                    >
+                      Mobile
+                    </button>
+                  </div>
+                </div>
+
+                {/* GOOGLE RESULT CARD */}
+                <div className="bg-[#202124] p-3.5 rounded-xl border border-white/5 text-left font-sans space-y-1">
+                  <div className="flex items-center space-x-2 text-[11px] text-[#bdc1c6] truncate">
+                    <span className="w-4 h-4 rounded-full bg-[#d9b45c] text-black flex items-center justify-center text-[9px] font-bold shrink-0">
+                      Q
+                    </span>
+                    <span className="truncate">truthquranacademy.com &gt; blog &gt; {currentPost.slug || "article-slug"}</span>
+                  </div>
+                  <h4 className="text-[#8ab4f8] text-sm md:text-base font-medium leading-snug hover:underline cursor-pointer line-clamp-2">
+                    {currentPost.metaTitle || currentPost.title || "Add article title..."}
+                  </h4>
+                  <p className="text-[#bdc1c6] text-xs leading-relaxed line-clamp-2">
+                    {currentPost.metaDescription || currentPost.excerpt || "Add a meta description to see how your article snippet appears in Google search engine result pages (SERPs)..."}
+                  </p>
                 </div>
               </div>
 
@@ -1434,6 +1573,19 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                   placeholder="SEO page title..."
                   className="w-full mt-1 bg-[#07080b] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#d9b45c]"
                 />
+                {/* Character progress bar */}
+                <div className="w-full h-1 bg-white/10 rounded-full mt-1.5 overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 ${
+                      (currentPost.metaTitle || "").length > 60
+                        ? "bg-red-500"
+                        : (currentPost.metaTitle || "").length >= 40
+                        ? "bg-emerald-400"
+                        : "bg-amber-400"
+                    }`}
+                    style={{ width: `${Math.min(100, ((currentPost.metaTitle || "").length / 60) * 100)}%` }}
+                  ></div>
+                </div>
               </div>
 
               {/* META DESCRIPTION & CHAR COUNT */}
@@ -1451,6 +1603,19 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                   rows={3}
                   className="w-full mt-1 bg-[#07080b] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#d9b45c]"
                 ></textarea>
+                {/* Character progress bar */}
+                <div className="w-full h-1 bg-white/10 rounded-full mt-1.5 overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 ${
+                      (currentPost.metaDescription || "").length > 160
+                        ? "bg-red-500"
+                        : (currentPost.metaDescription || "").length >= 120
+                        ? "bg-emerald-400"
+                        : "bg-amber-400"
+                    }`}
+                    style={{ width: `${Math.min(100, ((currentPost.metaDescription || "").length / 160) * 100)}%` }}
+                  ></div>
+                </div>
               </div>
 
               {/* READABILITY BADGE */}
