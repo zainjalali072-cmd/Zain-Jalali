@@ -66,25 +66,9 @@ interface WPSEOEditorProps {
 export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEditorProps) {
   // 1. Post Selection State
   const posts = cmsData.blogPosts || [];
-  const [selectedPostId, setSelectedPostId] = useState<string>(
-    externalPostId || (posts.length > 0 ? posts[0].id : "new")
-  );
 
-  useEffect(() => {
-    if (externalPostId) {
-      setSelectedPostId(externalPostId);
-    } else if (posts.length > 0 && !selectedPostId) {
-      setSelectedPostId(posts[0].id);
-    }
-  }, [externalPostId, posts]);
-
-  // Current Post loaded
-  const currentPostIndex = posts.findIndex((p) => p.id === selectedPostId || p.slug === selectedPostId);
-  const activePost = currentPostIndex !== -1 ? posts[currentPostIndex] : null;
-
-  // Local Editable Post State
-  const [currentPost, setCurrentPost] = useState<BlogPost | null>(() => {
-    if (activePost) return activePost;
+  // Helper to create a clean blank draft with all fields empty
+  const createBlankPost = (): BlogPost => {
     const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
     return {
       id: `post-${Date.now()}`,
@@ -102,7 +86,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
       date: today,
       readTime: "1 min read",
       tags: [],
-      status: "published",
+      status: "draft",
       slug: "",
       metaTitle: "",
       metaDescription: "",
@@ -112,37 +96,38 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
       imageTitle: "",
       imageCaption: ""
     };
+  };
+
+  // Selected post ID from dropdown or parent
+  const [selectedPostId, setSelectedPostId] = useState<string>(() => {
+    if (externalPostId && externalPostId !== "new") return externalPostId;
+    return "new";
   });
 
   useEffect(() => {
-    if (selectedPostId === "new" || externalPostId === "new") {
-      const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-      setCurrentPost({
-        id: `post-${Date.now()}`,
-        title: "",
-        excerpt: "",
-        content: "",
-        category: "Tajweed Rules",
-        coverImage: "",
-        featuredImage: "",
-        author: {
-          name: "Muhammad Zain",
-          avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80",
-          role: "Senior Quran Scholar"
-        },
-        date: today,
-        readTime: "1 min read",
-        tags: [],
-        status: "published",
-        slug: "",
-        metaTitle: "",
-        metaDescription: "",
-        focusKeyword: "",
-        robotsMeta: "index, follow",
-        imageAltText: "",
-        imageTitle: "",
-        imageCaption: ""
-      });
+    if (externalPostId && externalPostId !== "new") {
+      setSelectedPostId(externalPostId);
+    } else if (externalPostId === "new" || externalPostId === null) {
+      setSelectedPostId("new");
+    }
+  }, [externalPostId]);
+
+  // Current Post loaded
+  const currentPostIndex = posts.findIndex((p) => p.id === selectedPostId || p.slug === selectedPostId);
+  const activePost = currentPostIndex !== -1 ? posts[currentPostIndex] : null;
+
+  // Local Editable Post State
+  const [currentPost, setCurrentPost] = useState<BlogPost | null>(() => {
+    if (externalPostId && externalPostId !== "new") {
+      const p = posts.find((item) => item.id === externalPostId || item.slug === externalPostId);
+      if (p) return p;
+    }
+    return createBlankPost();
+  });
+
+  useEffect(() => {
+    if (selectedPostId === "new" || externalPostId === "new" || !selectedPostId) {
+      setCurrentPost(createBlankPost());
     } else if (activePost) {
       setCurrentPost({
         ...activePost,
@@ -1343,122 +1328,6 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
 
           </div>
 
-          {/* FEATURED IMAGE SECTION (BELOW EDITOR) */}
-          <div className="bg-[#12141b] border border-[#d9b45c]/20 rounded-2xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <ImageIcon size={18} className="text-[#d9b45c]" />
-                <h3 className="text-sm font-serif font-bold text-white uppercase tracking-wider">
-                  Featured Image (1200 × 800 px Standard)
-                </h3>
-              </div>
-              <span className="text-[10px] text-[#c9c2ab] font-mono">Rank Math 3:2 Ratio</span>
-            </div>
-
-            {currentPost.coverImage || currentPost.featuredImage ? (
-              <div className="space-y-4">
-                <div className="relative rounded-2xl overflow-hidden border border-[#d9b45c]/30 aspect-video max-h-64 bg-black flex items-center justify-center">
-                  <img
-                    src={currentPost.coverImage || currentPost.featuredImage}
-                    alt={currentPost.imageAltText || "Featured Image"}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-3 right-3 flex items-center space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPendingCropImage(currentPost.coverImage || currentPost.featuredImage || null);
-                        setShowCropModal(true);
-                      }}
-                      className="px-3 py-1.5 bg-black/80 backdrop-blur-md text-[#f2d98a] border border-[#d9b45c]/40 rounded-xl text-xs font-bold hover:bg-black"
-                    >
-                      <Crop size={14} className="inline mr-1" />
-                      Crop Studio (3:2)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleUpdateField("coverImage", "");
-                        handleUpdateField("featuredImage", "");
-                      }}
-                      className="px-3 py-1.5 bg-red-950/80 backdrop-blur-md text-red-300 border border-red-500/40 rounded-xl text-xs font-bold hover:bg-red-900"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-bold text-[#c9c2ab] uppercase">Image ALT Text (SEO)</label>
-                    <input
-                      type="text"
-                      value={currentPost.imageAltText || ""}
-                      onChange={(e) => handleUpdateField("imageAltText", e.target.value)}
-                      placeholder="Descriptive image alt text..."
-                      className="w-full mt-1 bg-[#07080b] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#d9b45c]"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-[#c9c2ab] uppercase">Image Title</label>
-                    <input
-                      type="text"
-                      value={currentPost.imageTitle || ""}
-                      onChange={(e) => handleUpdateField("imageTitle", e.target.value)}
-                      placeholder="Image title attribute..."
-                      className="w-full mt-1 bg-[#07080b] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#d9b45c]"
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed border-[#d9b45c]/30 rounded-2xl p-8 text-center space-y-3 bg-[#07080b]">
-                <Upload size={32} className="mx-auto text-[#d9b45c]" />
-                <p className="text-xs text-[#c9c2ab]">
-                  Upload or select a featured image for search engines & social previews.
-                </p>
-                <div className="flex items-center justify-center space-x-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => featuredFileInputRef.current?.click()}
-                    className="px-4 py-2 bg-[#d9b45c] text-black font-bold text-xs rounded-xl hover:bg-[#f2d98a] transition-all"
-                  >
-                    Upload from Computer
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMediaTargetField("featured");
-                      setShowMediaLibraryModal(true);
-                    }}
-                    className="px-4 py-2 bg-white/5 border border-white/10 text-white font-bold text-xs rounded-xl hover:bg-white/10"
-                  >
-                    Choose from Library
-                  </button>
-                </div>
-                <input
-                  type="file"
-                  ref={featuredFileInputRef}
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      const reader = new FileReader();
-                      reader.onload = (ev) => {
-                        const url = ev.target?.result as string;
-                        if (url) {
-                          handleUpdateField("coverImage", url);
-                          handleUpdateField("featuredImage", url);
-                        }
-                      };
-                      reader.readAsDataURL(e.target.files[0]);
-                    }
-                  }}
-                  accept="image/*"
-                  className="hidden"
-                />
-              </div>
-            )}
-          </div>
-
         </main>
 
         {/* RIGHT COLUMN: STICKY SIDEBAR (LG: COL-SPAN-4) */}
@@ -1677,6 +1546,153 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
           {activeSidebarTab === "publish" && (
             <div className="bg-[#12141b] border border-[#d9b45c]/20 rounded-2xl p-6 shadow-2xl space-y-5 animate-in fade-in duration-200">
               
+              {/* FEATURED IMAGE COMPONENT (IN SIDEBAR) */}
+              <div className="p-4 bg-[#07080b] rounded-2xl border border-[#d9b45c]/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <ImageIcon size={16} className="text-[#d9b45c]" />
+                    <span className="text-xs font-serif font-bold text-white uppercase tracking-wider">
+                      Featured Image
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-[#c9c2ab] font-mono">1200×800 (3:2)</span>
+                </div>
+
+                {currentPost.coverImage || currentPost.featuredImage ? (
+                  <div className="space-y-3">
+                    <div className="relative rounded-xl overflow-hidden border border-[#d9b45c]/30 aspect-[3/2] bg-black flex items-center justify-center group">
+                      <img
+                        src={currentPost.coverImage || currentPost.featuredImage}
+                        alt={currentPost.imageAltText || "Featured Image"}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-2 p-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPendingCropImage(currentPost.coverImage || currentPost.featuredImage || null);
+                            setShowCropModal(true);
+                          }}
+                          className="px-2.5 py-1.5 bg-black/90 backdrop-blur-md text-[#f2d98a] border border-[#d9b45c]/40 rounded-lg text-[11px] font-bold hover:bg-black flex items-center space-x-1"
+                        >
+                          <Crop size={12} />
+                          <span>Crop (3:2)</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleUpdateField("coverImage", "");
+                            handleUpdateField("featuredImage", "");
+                          }}
+                          className="px-2.5 py-1.5 bg-red-950/90 backdrop-blur-md text-red-300 border border-red-500/40 rounded-lg text-[11px] font-bold hover:bg-red-900 flex items-center space-x-1"
+                        >
+                          <Trash2 size={12} />
+                          <span>Remove</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Quick action buttons below image */}
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPendingCropImage(currentPost.coverImage || currentPost.featuredImage || null);
+                          setShowCropModal(true);
+                        }}
+                        className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-[#f2d98a] border border-[#d9b45c]/30 rounded-lg text-[10px] font-bold flex items-center justify-center space-x-1 transition-all"
+                      >
+                        <Crop size={11} />
+                        <span>Crop Studio (3:2)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleUpdateField("coverImage", "");
+                          handleUpdateField("featuredImage", "");
+                        }}
+                        className="py-1.5 px-3 bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-500/30 rounded-lg text-[10px] font-bold transition-all"
+                      >
+                        Remove
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 pt-1 border-t border-white/5">
+                      <div>
+                        <label className="text-[9px] font-bold text-[#c9c2ab] uppercase tracking-wider block">
+                          Image ALT Text (SEO)
+                        </label>
+                        <input
+                          type="text"
+                          value={currentPost.imageAltText || ""}
+                          onChange={(e) => handleUpdateField("imageAltText", e.target.value)}
+                          placeholder="e.g. child learning tajweed rules..."
+                          className="w-full mt-1 bg-[#12141b] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#d9b45c]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-[#c9c2ab] uppercase tracking-wider block">
+                          Image Title
+                        </label>
+                        <input
+                          type="text"
+                          value={currentPost.imageTitle || ""}
+                          onChange={(e) => handleUpdateField("imageTitle", e.target.value)}
+                          placeholder="e.g. tajweed-rules-guide..."
+                          className="w-full mt-1 bg-[#12141b] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#d9b45c]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-[#d9b45c]/30 rounded-xl p-5 text-center space-y-2.5 bg-[#12141b]/50">
+                    <Upload size={24} className="mx-auto text-[#d9b45c]" />
+                    <p className="text-[11px] text-[#c9c2ab]">
+                      Set featured image for Google SERP & social share cards.
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => featuredFileInputRef.current?.click()}
+                        className="w-full sm:w-auto px-3 py-1.5 bg-[#d9b45c] text-black font-bold text-[11px] rounded-lg hover:bg-[#f2d98a] transition-all"
+                      >
+                        Upload
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMediaTargetField("featured");
+                          setShowMediaLibraryModal(true);
+                        }}
+                        className="w-full sm:w-auto px-3 py-1.5 bg-white/5 border border-white/10 text-white font-bold text-[11px] rounded-lg hover:bg-white/10 transition-all"
+                      >
+                        Media Library
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <input
+                  type="file"
+                  ref={featuredFileInputRef}
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        const url = ev.target?.result as string;
+                        if (url) {
+                          handleUpdateField("coverImage", url);
+                          handleUpdateField("featuredImage", url);
+                        }
+                      };
+                      reader.readAsDataURL(e.target.files[0]);
+                    }
+                  }}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+
               {/* STATUS */}
               <div>
                 <label className="text-[10px] font-bold text-[#c9c2ab] uppercase tracking-wider">
