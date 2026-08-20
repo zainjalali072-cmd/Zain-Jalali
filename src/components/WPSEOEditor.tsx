@@ -54,7 +54,11 @@ import {
   Share2,
   Layers,
   Columns,
-  Zap
+  Zap,
+  MousePointerClick,
+  ArrowRight,
+  HelpCircle,
+  Type
 } from "lucide-react";
 
 interface WPSEOEditorProps {
@@ -232,6 +236,18 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
   const [showTableModal, setShowTableModal] = useState(false);
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(3);
+  const [tableHeaders, setTableHeaders] = useState<string[]>(["Feature / Topic", "Beginner Level", "Advanced Level"]);
+  const [tablePreset, setTablePreset] = useState<"custom" | "comparison" | "schedule" | "pricing">("comparison");
+
+  // Call to Action (CTA) Button Modal State
+  const [showCtaModal, setShowCtaModal] = useState(false);
+  const [ctaButtonText, setCtaButtonText] = useState("Book Free 3-Day Trial Class");
+  const [ctaLinkUrl, setCtaLinkUrl] = useState("/contact");
+  const [ctaSubtitle, setCtaSubtitle] = useState("1-on-1 Live Online Sessions with Certified Quran Scholars");
+  const [ctaStyle, setCtaStyle] = useState<"gold" | "royal" | "whatsapp" | "outline" | "banner">("gold");
+  const [ctaAlignment, setCtaAlignment] = useState<"center" | "left" | "right" | "full">("center");
+  const [ctaOpenNewTab, setCtaOpenNewTab] = useState(true);
+  const [ctaIcon, setCtaIcon] = useState<"arrow" | "whatsapp" | "phone" | "sparkles" | "book" | "none">("arrow");
 
   const [showMediaLibraryModal, setShowMediaLibraryModal] = useState(false);
   const [mediaTargetField, setMediaTargetField] = useState<"featured" | "internal">("featured");
@@ -560,6 +576,241 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
       setCurrentPost(null);
     }
     showToast("Article deleted.");
+  };
+
+  // Smart Plain-Text / Markdown to HTML Content Formatter
+  const formatContentForPreview = (raw?: string): string => {
+    if (!raw || !raw.trim()) return "<p class='text-gray-500 italic'>No content written yet.</p>";
+    
+    // If raw already contains HTML tags like <p>, <h2>, <h3>, <table>, <div>, <ul>, <ol>, <blockquote>
+    const hasHtml = /<\/?(p|h[1-6]|table|div|ul|ol|blockquote|hr|section|article)[^>]*>/i.test(raw);
+    
+    if (hasHtml) {
+      return raw;
+    }
+
+    // Convert plain text / markdown blocks into clean HTML
+    const blocks = raw.split(/\n\n+/);
+    const formatted = blocks.map((block) => {
+      const trimmed = block.trim();
+      if (!trimmed) return "";
+      
+      // Markdown H3
+      if (trimmed.startsWith("### ")) {
+        return `<h3>${trimmed.replace(/^###\s+/, "")}</h3>`;
+      }
+      // Markdown H2
+      if (trimmed.startsWith("## ")) {
+        return `<h2>${trimmed.replace(/^##\s+/, "")}</h2>`;
+      }
+      // Markdown H1
+      if (trimmed.startsWith("# ")) {
+        return `<h1>${trimmed.replace(/^#\s+/, "")}</h1>`;
+      }
+      
+      // Bullet list
+      if (trimmed.startsWith("- ") || trimmed.startsWith("* ") || trimmed.includes("\n- ") || trimmed.includes("\n* ")) {
+        const items = trimmed.split(/\n[-*]\s+/).filter(Boolean);
+        return `<ul class="list-disc pl-5 space-y-1.5 my-4 text-[#F3F4F6] marker:text-[#d9b45c]">${items.map(it => `<li>${it.replace(/^[-*]\s+/, "")}</li>`).join("")}</ul>`;
+      }
+
+      // Numbered list
+      if (/^\d+\.\s+/.test(trimmed) || trimmed.includes("\n1. ")) {
+        const items = trimmed.split(/\n\d+\.\s+/).filter(Boolean);
+        return `<ol class="list-decimal pl-5 space-y-1.5 my-4 text-[#F3F4F6] marker:text-[#d9b45c]">${items.map(it => `<li>${it.replace(/^\d+\.\s+/, "")}</li>`).join("")}</ol>`;
+      }
+
+      // Paragraph with <br/> for single newlines
+      const withBreaks = trimmed.replace(/\n/g, "<br />");
+      return `<p class="my-4 leading-relaxed text-[#F3F4F6]">${withBreaks}</p>`;
+    }).filter(Boolean);
+
+    return formatted.join("\n\n");
+  };
+
+  // Convert current content into clean structured HTML
+  const autoFormatContentToHTML = (raw: string): string => {
+    if (!raw.trim()) return raw;
+    const blocks = raw.split(/\n\n+/);
+    const formatted = blocks.map((block) => {
+      const trimmed = block.trim();
+      if (!trimmed) return "";
+      
+      if (trimmed.startsWith("### ")) {
+        return `<h3>${trimmed.replace(/^###\s+/, "")}</h3>`;
+      }
+      if (trimmed.startsWith("## ")) {
+        return `<h2>${trimmed.replace(/^##\s+/, "")}</h2>`;
+      }
+      if (trimmed.startsWith("# ")) {
+        return `<h1>${trimmed.replace(/^#\s+/, "")}</h1>`;
+      }
+      if (/^<h[1-6]/i.test(trimmed) || /^<table/i.test(trimmed) || /^<div/i.test(trimmed) || /^<ul/i.test(trimmed) || /^<ol/i.test(trimmed) || /^<blockquote/i.test(trimmed)) {
+        return trimmed;
+      }
+      
+      if (trimmed.startsWith("- ") || trimmed.startsWith("* ") || trimmed.includes("\n- ") || trimmed.includes("\n* ")) {
+        const items = trimmed.split(/\n[-*]\s+/).filter(Boolean);
+        return `<ul class="list-disc pl-5 space-y-1.5 my-4 text-[#F3F4F6] marker:text-[#d9b45c]">\n${items.map(it => `  <li>${it.replace(/^[-*]\s+/, "")}</li>`).join("\n")}\n</ul>`;
+      }
+
+      if (/^\d+\.\s+/.test(trimmed) || trimmed.includes("\n1. ")) {
+        const items = trimmed.split(/\n\d+\.\s+/).filter(Boolean);
+        return `<ol class="list-decimal pl-5 space-y-1.5 my-4 text-[#F3F4F6] marker:text-[#d9b45c]">\n${items.map(it => `  <li>${it.replace(/^\d+\.\s+/, "")}</li>`).join("\n")}\n</ol>`;
+      }
+
+      const withBreaks = trimmed.replace(/\n/g, "<br />");
+      return `<p>${withBreaks}</p>`;
+    }).filter(Boolean);
+
+    return formatted.join("\n\n");
+  };
+
+  const handleAutoFormatText = () => {
+    if (!currentPost || !currentPost.content) {
+      showToast("No content to format.");
+      return;
+    }
+    const formatted = autoFormatContentToHTML(currentPost.content);
+    handleUpdateField("content", formatted);
+    pushHistory(formatted);
+    showToast("Formatted plain text into structured HTML paragraphs & headings!");
+  };
+
+  // Heading Formatter tool
+  const applyHeading = (level: "h2" | "h3" | "h4" | "p") => {
+    if (!currentPost) return;
+    const textarea = document.getElementById("gutenberg-content-textarea") as HTMLTextAreaElement | null;
+    const content = currentPost.content || "";
+
+    if (textarea && textarea.selectionStart !== undefined && textarea.selectionEnd !== undefined && textarea.selectionStart !== textarea.selectionEnd) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = content.substring(start, end).trim();
+      const openTag = `<${level}>`;
+      const closeTag = `</${level}>`;
+      const newContent = content.substring(0, start) + `\n${openTag}${selectedText}${closeTag}\n` + content.substring(end);
+      handleUpdateField("content", newContent);
+      pushHistory(newContent);
+      showToast(`Applied <${level}> to selected heading`);
+    } else {
+      const defaultHeading = level === "h2" ? "Main Section Heading" : level === "h3" ? "Sub-section Heading" : level === "h4" ? "Minor Topic" : "Paragraph text here";
+      const newContent = content + `\n\n<${level}>${defaultHeading}</${level}>\n\n`;
+      handleUpdateField("content", newContent);
+      pushHistory(newContent);
+      showToast(`Inserted <${level}> block`);
+    }
+  };
+
+  // Call-to-Action (CTA) Button Inserter
+  const handleInsertCta = (position: "cursor" | "bottom" = "cursor") => {
+    if (!currentPost) return;
+    
+    let iconSvg = "";
+    if (ctaIcon === "arrow") {
+      iconSvg = `<svg class="w-4 h-4 ml-2 inline-block shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
+    } else if (ctaIcon === "whatsapp") {
+      iconSvg = `<svg class="w-4 h-4 mr-2 inline-block shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>`;
+    } else if (ctaIcon === "phone") {
+      iconSvg = `<svg class="w-4 h-4 mr-2 inline-block shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>`;
+    } else if (ctaIcon === "sparkles") {
+      iconSvg = `<span class="mr-2">✨</span>`;
+    } else if (ctaIcon === "book") {
+      iconSvg = `<span class="mr-2">📖</span>`;
+    }
+
+    let buttonClasses = "";
+    if (ctaStyle === "gold") {
+      buttonClasses = "inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#d9b45c] to-[#f2d98a] text-black font-extrabold text-sm md:text-base shadow-xl hover:scale-105 transition-all transform no-underline border border-[#d9b45c]";
+    } else if (ctaStyle === "royal") {
+      buttonClasses = "inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-[#1c202b] hover:bg-[#252b3b] text-[#f2d98a] border-2 border-[#d9b45c] font-extrabold text-sm md:text-base shadow-xl hover:scale-105 transition-all transform no-underline";
+    } else if (ctaStyle === "whatsapp") {
+      buttonClasses = "inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm md:text-base shadow-xl hover:scale-105 transition-all transform no-underline border border-emerald-400";
+    } else if (ctaStyle === "outline") {
+      buttonClasses = "inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-transparent hover:bg-[#d9b45c]/20 text-[#f2d98a] border-2 border-[#d9b45c] font-bold text-sm md:text-base transition-all no-underline";
+    }
+
+    let alignClass = "text-center";
+    if (ctaAlignment === "left") alignClass = "text-left";
+    else if (ctaAlignment === "right") alignClass = "text-right";
+    else if (ctaAlignment === "full") alignClass = "text-center w-full";
+
+    let ctaHtml = "";
+    if (ctaStyle === "banner") {
+      ctaHtml = `\n<div class="cta-button-block my-10 p-6 md:p-8 bg-gradient-to-br from-[#12141b] to-[#07080b] border border-[#d9b45c]/30 rounded-2xl text-center space-y-4 shadow-2xl">\n  <h3 class="font-serif text-xl md:text-2xl text-[#f3ecd8] font-bold">${ctaButtonText}</h3>\n  ${ctaSubtitle ? `<p class="text-xs md:text-sm text-[#c9c2ab] max-w-lg mx-auto leading-relaxed">${ctaSubtitle}</p>` : ''}\n  <div>\n    <a href="${ctaLinkUrl}" ${ctaOpenNewTab ? 'target="_blank" rel="noopener noreferrer"' : ''} class="inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-[#d9b45c] hover:bg-[#f2d98a] text-black font-extrabold text-sm md:text-base shadow-xl hover:scale-105 transition-all transform no-underline border border-[#d9b45c]">\n      <span>Enroll / Book Free Trial Now</span>\n      <svg class="w-4 h-4 ml-2 inline-block" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>\n    </a>\n  </div>\n</div>\n`;
+    } else {
+      ctaHtml = `\n<div class="cta-button-block my-8 ${alignClass}">\n  <a href="${ctaLinkUrl}" ${ctaOpenNewTab ? 'target="_blank" rel="noopener noreferrer"' : ''} class="${buttonClasses} ${ctaAlignment === 'full' ? 'w-full' : ''}">\n    ${iconSvg}\n    <span>${ctaButtonText}</span>\n  </a>\n  ${ctaSubtitle ? `<p class="text-xs text-[#c9c2ab] mt-2 italic">${ctaSubtitle}</p>` : ''}\n</div>\n`;
+    }
+
+    let newContent = "";
+    if (position === "bottom") {
+      newContent = `${currentPost.content || ""}\n\n${ctaHtml}`;
+    } else {
+      const textarea = document.getElementById("gutenberg-content-textarea") as HTMLTextAreaElement | null;
+      if (textarea && textarea.selectionStart !== undefined) {
+        const pos = textarea.selectionStart;
+        const content = currentPost.content || "";
+        newContent = content.substring(0, pos) + `\n\n${ctaHtml}\n\n` + content.substring(pos);
+      } else {
+        newContent = `${currentPost.content || ""}\n\n${ctaHtml}`;
+      }
+    }
+
+    handleUpdateField("content", newContent);
+    pushHistory(newContent);
+    setShowCtaModal(false);
+    showToast("CTA Button inserted into article!");
+  };
+
+  // Insert Styled Table
+  const handleInsertTable = () => {
+    if (!currentPost) return;
+    
+    let html = `<div class="table-responsive my-6 overflow-x-auto">\n<table class="w-full border-collapse border border-[#d9b45c]/30 rounded-xl overflow-hidden text-xs md:text-sm bg-[#12141b]/90 text-left shadow-lg">\n  <thead>\n    <tr class="bg-[#181b24] border-b border-[#d9b45c]/30">\n`;
+    
+    for (let c = 0; c < tableCols; c++) {
+      const headerTitle = tableHeaders[c] || `Column ${c + 1}`;
+      html += `      <th class="p-3.5 font-serif font-bold text-[#f2d98a] border-r border-white/10 uppercase tracking-wider text-xs">${headerTitle}</th>\n`;
+    }
+    html += `    </tr>\n  </thead>\n  <tbody class="divide-y divide-white/5">\n`;
+    
+    for (let r = 1; r <= tableRows; r++) {
+      html += `    <tr class="hover:bg-white/[0.04] transition-colors">\n`;
+      for (let c = 0; c < tableCols; c++) {
+        let cellText = `Sample Data ${r}-${c + 1}`;
+        if (tablePreset === "comparison") {
+          if (c === 0) cellText = ["Live 1-on-1 Classes", "Certified Jamia Scholars", "Flexible Scheduling", "Tajweed & Makharij Rules"][r - 1] || `Feature ${r}`;
+          else if (c === 1) cellText = ["Basic", "Yes", "Limited", "Basic Rules"][r - 1] || "Available";
+          else cellText = ["Comprehensive", "Senior Scholars", "24/7 Schedule", "Complete Practical Tajweed"][r - 1] || "Full Access";
+        } else if (tablePreset === "pricing") {
+          if (c === 0) cellText = ["Quran Tajweed Course", "Hifz Quran Program", "Islamic Studies"][r - 1] || `Course ${r}`;
+          else if (c === 1) cellText = ["$40 / Month", "$60 / Month", "$35 / Month"][r - 1] || "$50";
+          else cellText = ["3 Classes / Week", "5 Classes / Week", "2 Classes / Week"][r - 1] || "30 Mins / Class";
+        } else if (tablePreset === "schedule") {
+          if (c === 0) cellText = ["Monday - Wednesday", "Tuesday - Thursday", "Saturday - Sunday"][r - 1] || `Day ${r}`;
+          else if (c === 1) cellText = ["Morning / Evening", "Flexible Slot", "Weekend Special"][r - 1] || "Slot";
+          else cellText = ["Quran Reading & Tajweed", "Hifz & Revision", "Arabic Grammar"][r - 1] || "Subject";
+        }
+        html += `      <td class="p-3.5 text-[#F3F4F6] border-r border-white/5 last:border-r-0">${cellText}</td>\n`;
+      }
+      html += `    </tr>\n`;
+    }
+    html += `  </tbody>\n</table>\n</div>\n`;
+
+    const textarea = document.getElementById("gutenberg-content-textarea") as HTMLTextAreaElement | null;
+    let newContent = "";
+    if (textarea && textarea.selectionStart !== undefined) {
+      const pos = textarea.selectionStart;
+      const content = currentPost.content || "";
+      newContent = content.substring(0, pos) + `\n\n${html}\n\n` + content.substring(pos);
+    } else {
+      newContent = `${currentPost.content || ""}\n\n${html}`;
+    }
+
+    handleUpdateField("content", newContent);
+    pushHistory(newContent);
+    setShowTableModal(false);
+    showToast("Table inserted into article!");
   };
 
   // Formatting tools
@@ -943,19 +1194,36 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                 onChange={(e) => {
                   const val = e.target.value;
                   if (val === "p") applyFormattingToSelection("<p class='my-4 leading-relaxed text-[#F3F4F6]'>", "</p>");
-                  else if (val === "h1") applyFormattingToSelection("<h1 class='font-serif font-bold text-2xl md:text-3xl text-white my-6'>", "</h1>");
-                  else if (val === "h2") applyFormattingToSelection("<h2 class='font-serif font-bold text-xl md:text-2xl text-white border-b border-[#d9b45c]/25 pb-2 my-6'>", "</h2>");
-                  else if (val === "h3") applyFormattingToSelection("<h3 class='font-serif font-semibold text-lg md:text-xl text-[#f2d98a] my-5'>", "</h3>");
-                  else if (val === "h4") applyFormattingToSelection("<h4 class='font-serif font-medium text-base md:text-lg text-[#f3ecd8] my-4'>", "</h4>");
+                  else if (val === "h1") applyHeading("p");
+                  else if (val === "h2") applyHeading("h2");
+                  else if (val === "h3") applyHeading("h3");
+                  else if (val === "h4") applyHeading("h4");
                 }}
-                className="bg-[#12141b] text-xs font-bold text-[#f2d98a] border border-[#d9b45c]/30 rounded-lg px-2.5 py-1.5 outline-none cursor-pointer"
+                className="bg-[#12141b] text-xs font-bold text-[#f2d98a] border border-[#d9b45c]/30 rounded-lg px-2.5 py-1.5 outline-none cursor-pointer hover:border-[#d9b45c]"
               >
-                <option value="p">Paragraph</option>
-                <option value="h1">Heading 1 (H1)</option>
-                <option value="h2">Heading 2 (H2)</option>
-                <option value="h3">Heading 3 (H3)</option>
-                <option value="h4">Heading 4 (H4)</option>
+                <option value="p">¶ Paragraph</option>
+                <option value="h2">H2 — Main Heading</option>
+                <option value="h3">H3 — Sub Heading</option>
+                <option value="h4">H4 — Small Topic</option>
               </select>
+
+              {/* Direct Quick Heading 2 & Heading 3 Buttons */}
+              <button
+                type="button"
+                onClick={() => applyHeading("h2")}
+                className="px-2 py-1 bg-white/5 hover:bg-[#d9b45c]/20 text-[#f2d98a] hover:text-white border border-[#d9b45c]/30 rounded-lg text-xs font-serif font-bold transition-all"
+                title="Heading 2 (H2) - Large Bold Section Title"
+              >
+                H2
+              </button>
+              <button
+                type="button"
+                onClick={() => applyHeading("h3")}
+                className="px-2 py-1 bg-white/5 hover:bg-[#d9b45c]/20 text-[#f2d98a] hover:text-white border border-[#d9b45c]/30 rounded-lg text-xs font-serif font-bold transition-all"
+                title="Heading 3 (H3) - Subsection Title"
+              >
+                H3
+              </button>
 
               <div className="h-5 w-[1px] bg-white/10 my-auto"></div>
 
@@ -1015,7 +1283,7 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
 
               <div className="h-5 w-[1px] bg-white/10 my-auto"></div>
 
-              {/* Link (Golden Anchor Tag), Table, Image, HR */}
+              {/* Link (Golden Anchor Tag), Table, CTA Button, Image, HR */}
               <button
                 type="button"
                 onClick={() => {
@@ -1032,10 +1300,29 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
               <button
                 type="button"
                 onClick={() => setShowTableModal(true)}
-                className="p-1.5 bg-white/5 hover:bg-white/10 text-[#c9c2ab] hover:text-white rounded-lg"
-                title="Insert Table"
+                className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[#f2d98a] hover:text-white border border-[#d9b45c]/30 rounded-lg text-xs font-bold flex items-center space-x-1 transition-all"
+                title="Insert Comparison or Data Table"
               >
                 <TableIcon size={14} />
+                <span>Table</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCtaModal(true)}
+                className="px-2.5 py-1 bg-gradient-to-r from-[#d9b45c]/20 to-[#f2d98a]/20 hover:from-[#d9b45c]/30 hover:to-[#f2d98a]/30 text-[#f2d98a] hover:text-white border border-[#d9b45c]/50 hover:border-[#d9b45c] rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-sm transition-all"
+                title="Insert Call-to-Action (CTA) Button"
+              >
+                <MousePointerClick size={14} className="text-[#d9b45c]" />
+                <span>CTA Button</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleAutoFormatText}
+                className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[#c9c2ab] hover:text-[#f2d98a] border border-white/10 hover:border-[#d9b45c]/40 rounded-lg text-xs font-medium flex items-center space-x-1 transition-all"
+                title="Auto-format plain text into structured HTML paragraphs & headings"
+              >
+                <Sparkles size={13} className="text-[#d9b45c]" />
+                <span>Auto-Format</span>
               </button>
               <button
                 type="button"
@@ -1169,17 +1456,25 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                 )}
                 <div
                   className="prose prose-invert max-w-none text-xs md:text-sm text-[#F3F4F6] leading-relaxed font-sans
-                    [&>h1]:font-serif [&>h1]:text-2xl [&>h1]:md:text-3xl [&>h1]:text-white [&>h1]:font-bold [&>h1]:mt-6 [&>h1]:mb-3
-                    [&>h2]:font-serif [&>h2]:text-xl [&>h2]:md:text-2xl [&>h2]:text-white [&>h2]:font-bold [&>h2]:border-b [&>h2]:border-[#d9b45c]/25 [&>h2]:pb-2 [&>h2]:mt-6 [&>h2]:mb-3
-                    [&>h3]:font-serif [&>h3]:text-lg [&>h3]:md:text-xl [&>h3]:text-[#f2d98a] [&>h3]:font-semibold [&>h3]:mt-5 [&>h3]:mb-2
-                    [&>h4]:font-serif [&>h4]:text-base [&>h4]:md:text-lg [&>h4]:text-[#f3ecd8] [&>h4]:font-medium [&>h4]:mt-4 [&>h4]:mb-2
-                    [&>p]:mb-4 [&>p]:leading-relaxed [&>p]:text-[#F3F4F6]
+                    [&>h1]:font-serif [&>h1]:text-2xl [&>h1]:md:text-3xl [&>h1]:text-white [&>h1]:font-bold [&>h1]:mt-8 [&>h1]:mb-4
+                    [&>h2]:font-serif [&>h2]:text-xl [&>h2]:md:text-2xl [&>h2]:text-white [&>h2]:font-bold [&>h2]:border-b [&>h2]:border-[#d9b45c]/30 [&>h2]:pb-2 [&>h2]:mt-8 [&>h2]:mb-4
+                    [&_h2]:font-serif [&_h2]:text-xl [&_h2]:md:text-2xl [&_h2]:text-white [&_h2]:font-bold [&_h2]:border-b [&_h2]:border-[#d9b45c]/30 [&_h2]:pb-2 [&_h2]:mt-8 [&_h2]:mb-4
+                    [&>h3]:font-serif [&>h3]:text-lg [&>h3]:md:text-xl [&>h3]:text-[#f2d98a] [&>h3]:font-bold [&>h3]:mt-6 [&>h3]:mb-3
+                    [&_h3]:font-serif [&_h3]:text-lg [&_h3]:md:text-xl [&_h3]:text-[#f2d98a] [&_h3]:font-bold [&_h3]:mt-6 [&_h3]:mb-3
+                    [&>h4]:font-serif [&>h4]:text-base [&>h4]:md:text-lg [&>h4]:text-[#f3ecd8] [&>h4]:font-semibold [&>h4]:mt-5 [&>h4]:mb-2
+                    [&_h4]:font-serif [&_h4]:text-base [&_h4]:md:text-lg [&_h4]:text-[#f3ecd8] [&_h4]:font-semibold [&_h4]:mt-5 [&_h4]:mb-2
+                    [&>p]:mb-4 [&>p]:leading-relaxed [&>p]:text-[#F3F4F6] [&_p]:mb-4 [&_p]:leading-relaxed [&_p]:text-[#F3F4F6]
                     [&>ul]:my-4 [&>ul]:pl-5 [&>ul]:space-y-1.5 [&>ul>li]:list-disc [&>ul>li]:marker:text-[#d9b45c] [&>ul>li]:text-[#F3F4F6]
                     [&>ol]:my-4 [&>ol]:pl-5 [&>ol]:space-y-1.5 [&>ol>li]:list-decimal [&>ol>li]:marker:text-[#d9b45c] [&>ol>li]:text-[#F3F4F6]
                     [&>blockquote]:my-6 [&>blockquote]:p-4 [&>blockquote]:bg-[#12141b] [&>blockquote]:border-l-4 [&>blockquote]:border-[#d9b45c] [&>blockquote]:italic [&>blockquote]:text-[#f2d98a] [&>blockquote]:rounded-r-xl
+                    [&_table]:w-full [&_table]:my-6 [&_table]:border-collapse [&_table]:border [&_table]:border-[#d9b45c]/30 [&_table]:rounded-xl [&_table]:overflow-hidden [&_table]:text-xs [&_table]:md:text-sm [&_table]:bg-[#12141b]/90 [&_table]:text-left [&_table]:shadow-lg
+                    [&_th]:bg-[#1c202b] [&_th]:text-[#f2d98a] [&_th]:font-serif [&_th]:font-bold [&_th]:p-3.5 [&_th]:border-b [&_th]:border-[#d9b45c]/30 [&_th]:border-r [&_th]:border-white/10 [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-xs
+                    [&_td]:p-3.5 [&_td]:text-xs [&_td]:md:text-sm [&_td]:text-[#F3F4F6] [&_td]:border-b [&_td]:border-white/5 [&_td]:border-r [&_td]:border-white/5
+                    [&_tr:hover]:bg-white/[0.04] [&_tr:hover]:transition-colors
+                    [&_.cta-button-block]:my-8 [&_.cta-button-block_a]:no-underline [&_.cta-button-block_a]:hover:no-underline
                     [&>a]:text-[#FACC15] [&>a]:underline [&>a]:hover:text-[#EAB308] [&>a]:font-semibold
                     [&_a]:text-[#FACC15] [&_a]:underline [&_a]:hover:text-[#EAB308] [&_a]:font-semibold"
-                  dangerouslySetInnerHTML={{ __html: currentPost.content || "<p class='text-gray-500 italic'>No content written yet.</p>" }}
+                  dangerouslySetInnerHTML={{ __html: formatContentForPreview(currentPost.content) }}
                 />
               </div>
             ) : viewLayoutMode === "split" ? (
@@ -1230,17 +1525,24 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
                   )}
                   <div
                     className="prose prose-invert max-w-none text-xs text-[#F3F4F6] leading-relaxed font-sans
-                      [&>h1]:font-serif [&>h1]:text-xl [&>h1]:text-white [&>h1]:font-bold [&>h1]:mt-4 [&>h1]:mb-2
-                      [&>h2]:font-serif [&>h2]:text-base [&>h2]:text-white [&>h2]:font-bold [&>h2]:border-b [&>h2]:border-[#d9b45c]/20 [&>h2]:pb-1 [&>h2]:mt-4 [&>h2]:mb-2
-                      [&>h3]:font-serif [&>h3]:text-sm [&>h3]:text-[#f2d98a] [&>h3]:font-semibold [&>h3]:mt-3 [&>h3]:mb-1
-                      [&>h4]:font-serif [&>h4]:text-xs [&>h4]:text-[#f3ecd8] [&>h4]:font-medium [&>h4]:mt-2 [&>h4]:mb-1
-                      [&>p]:mb-3 [&>p]:text-[#F3F4F6]
+                      [&>h1]:font-serif [&>h1]:text-xl [&>h1]:text-white [&>h1]:font-bold [&>h1]:mt-5 [&>h1]:mb-2
+                      [&>h2]:font-serif [&>h2]:text-base [&>h2]:text-white [&>h2]:font-bold [&>h2]:border-b [&>h2]:border-[#d9b45c]/25 [&>h2]:pb-1 [&>h2]:mt-5 [&>h2]:mb-2
+                      [&_h2]:font-serif [&_h2]:text-base [&_h2]:text-white [&_h2]:font-bold [&_h2]:border-b [&_h2]:border-[#d9b45c]/25 [&_h2]:pb-1 [&_h2]:mt-5 [&_h2]:mb-2
+                      [&>h3]:font-serif [&>h3]:text-sm [&>h3]:text-[#f2d98a] [&>h3]:font-bold [&>h3]:mt-4 [&>h3]:mb-2
+                      [&_h3]:font-serif [&_h3]:text-sm [&_h3]:text-[#f2d98a] [&_h3]:font-bold [&_h3]:mt-4 [&_h3]:mb-2
+                      [&>h4]:font-serif [&>h4]:text-xs [&>h4]:text-[#f3ecd8] [&>h4]:font-semibold [&>h4]:mt-3 [&>h4]:mb-1
+                      [&_h4]:font-serif [&_h4]:text-xs [&_h4]:text-[#f3ecd8] [&_h4]:font-semibold [&_h4]:mt-3 [&_h4]:mb-1
+                      [&>p]:mb-3 [&>p]:text-[#F3F4F6] [&_p]:mb-3 [&_p]:text-[#F3F4F6]
                       [&>ul]:my-3 [&>ul]:pl-4 [&>ul>li]:list-disc [&>ul>li]:marker:text-[#d9b45c] [&>ul>li]:text-[#F3F4F6]
                       [&>ol]:my-3 [&>ol]:pl-4 [&>ol>li]:list-decimal [&>ol>li]:marker:text-[#d9b45c] [&>ol>li]:text-[#F3F4F6]
                       [&>blockquote]:my-4 [&>blockquote]:p-3 [&>blockquote]:bg-[#12141b] [&>blockquote]:border-l-2 [&>blockquote]:border-[#d9b45c] [&>blockquote]:italic [&>blockquote]:text-[#f2d98a]
+                      [&_table]:w-full [&_table]:my-4 [&_table]:border-collapse [&_table]:border [&_table]:border-[#d9b45c]/30 [&_table]:rounded-xl [&_table]:overflow-hidden [&_table]:text-xs [&_table]:bg-[#12141b]/90 [&_table]:text-left
+                      [&_th]:bg-[#1c202b] [&_th]:text-[#f2d98a] [&_th]:font-serif [&_th]:font-bold [&_th]:p-2.5 [&_th]:border-b [&_th]:border-[#d9b45c]/30 [&_th]:border-r [&_th]:border-white/10 [&_th]:text-xs
+                      [&_td]:p-2.5 [&_td]:text-xs [&_td]:text-[#F3F4F6] [&_td]:border-b [&_td]:border-white/5 [&_td]:border-r [&_td]:border-white/5
+                      [&_.cta-button-block]:my-4 [&_.cta-button-block_a]:no-underline
                       [&>a]:text-[#FACC15] [&>a]:underline [&>a]:hover:text-[#EAB308] [&>a]:font-semibold
                       [&_a]:text-[#FACC15] [&_a]:underline [&_a]:hover:text-[#EAB308] [&_a]:font-semibold"
-                    dangerouslySetInnerHTML={{ __html: currentPost.content || "<p class='text-gray-500 italic'>Type on the left to see live preview...</p>" }}
+                    dangerouslySetInnerHTML={{ __html: formatContentForPreview(currentPost.content) }}
                   />
                 </div>
               </div>
@@ -1898,84 +2200,400 @@ export default function WPSEOEditor({ cmsData, onSave, externalPostId }: WPSEOEd
       {/* 4. PREVIEW MODAL */}
       {showPreviewModal && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#07080b] border border-[#d9b45c]/30 rounded-3xl p-6 max-w-4xl w-full h-[85vh] overflow-y-auto shadow-2xl space-y-6">
+          <div className="bg-[#07080b] border border-[#d9b45c]/30 rounded-3xl p-6 md:p-8 max-w-4xl w-full h-[85vh] overflow-y-auto shadow-2xl space-y-6">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div>
-                <span className="text-[10px] font-bold text-[#d9b45c] uppercase">Live Article Preview</span>
-                <h2 className="text-xl font-serif font-bold text-white">{currentPost.title || "Untitled Article"}</h2>
+                <span className="text-[10px] font-bold text-[#d9b45c] uppercase tracking-wider">Live Article Preview</span>
+                <h2 className="text-xl md:text-2xl font-serif font-bold text-white mt-1">{currentPost.title || "Untitled Article"}</h2>
               </div>
-              <button onClick={() => setShowPreviewModal(false)} className="p-2 bg-white/5 rounded-xl text-white">
+              <button onClick={() => setShowPreviewModal(false)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-white">
                 <X size={18} />
               </button>
             </div>
 
-            {currentPost.coverImage && (
+            {(currentPost.coverImage || currentPost.featuredImage) && (
               <img
-                src={currentPost.coverImage}
+                src={currentPost.coverImage || currentPost.featuredImage}
                 alt={currentPost.imageAltText || "Featured"}
-                className="w-full h-80 object-cover rounded-2xl border border-white/10"
+                className="w-full max-h-96 object-cover rounded-2xl border border-white/10 shadow-2xl"
               />
             )}
 
             <div
-              className="prose prose-invert max-w-none text-xs md:text-sm text-[#c9c2ab] leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: currentPost.content || "<p>No content preview available.</p>" }}
-            ></div>
+              className="prose prose-invert max-w-none text-xs md:text-sm text-[#F3F4F6] leading-relaxed font-sans
+                [&>h1]:font-serif [&>h1]:text-2xl [&>h1]:md:text-3xl [&>h1]:text-white [&>h1]:font-bold [&>h1]:mt-8 [&>h1]:mb-4
+                [&>h2]:font-serif [&>h2]:text-xl [&>h2]:md:text-2xl [&>h2]:text-white [&>h2]:font-bold [&>h2]:border-b [&>h2]:border-[#d9b45c]/30 [&>h2]:pb-2 [&>h2]:mt-8 [&>h2]:mb-4
+                [&_h2]:font-serif [&_h2]:text-xl [&_h2]:md:text-2xl [&_h2]:text-white [&_h2]:font-bold [&_h2]:border-b [&_h2]:border-[#d9b45c]/30 [&_h2]:pb-2 [&_h2]:mt-8 [&_h2]:mb-4
+                [&>h3]:font-serif [&>h3]:text-lg [&>h3]:md:text-xl [&>h3]:text-[#f2d98a] [&>h3]:font-bold [&>h3]:mt-6 [&>h3]:mb-3
+                [&_h3]:font-serif [&_h3]:text-lg [&_h3]:md:text-xl [&_h3]:text-[#f2d98a] [&_h3]:font-bold [&_h3]:mt-6 [&_h3]:mb-3
+                [&>h4]:font-serif [&>h4]:text-base [&>h4]:md:text-lg [&>h4]:text-[#f3ecd8] [&>h4]:font-semibold [&>h4]:mt-5 [&>h4]:mb-2
+                [&_h4]:font-serif [&_h4]:text-base [&_h4]:md:text-lg [&_h4]:text-[#f3ecd8] [&_h4]:font-semibold [&_h4]:mt-5 [&_h4]:mb-2
+                [&>p]:mb-4 [&>p]:leading-relaxed [&>p]:text-[#F3F4F6] [&_p]:mb-4 [&_p]:leading-relaxed [&_p]:text-[#F3F4F6]
+                [&>ul]:my-4 [&>ul]:pl-5 [&>ul]:space-y-1.5 [&>ul>li]:list-disc [&>ul>li]:marker:text-[#d9b45c] [&>ul>li]:text-[#F3F4F6]
+                [&>ol]:my-4 [&>ol]:pl-5 [&>ol]:space-y-1.5 [&>ol>li]:list-decimal [&>ol>li]:marker:text-[#d9b45c] [&>ol>li]:text-[#F3F4F6]
+                [&>blockquote]:my-6 [&>blockquote]:p-4 [&>blockquote]:bg-[#12141b] [&>blockquote]:border-l-4 [&>blockquote]:border-[#d9b45c] [&>blockquote]:italic [&>blockquote]:text-[#f2d98a] [&>blockquote]:rounded-r-xl
+                [&_table]:w-full [&_table]:my-6 [&_table]:border-collapse [&_table]:border [&_table]:border-[#d9b45c]/30 [&_table]:rounded-xl [&_table]:overflow-hidden [&_table]:text-xs [&_table]:md:text-sm [&_table]:bg-[#12141b]/90 [&_table]:text-left [&_table]:shadow-lg
+                [&_th]:bg-[#1c202b] [&_th]:text-[#f2d98a] [&_th]:font-serif [&_th]:font-bold [&_th]:p-3.5 [&_th]:border-b [&_th]:border-[#d9b45c]/30 [&_th]:border-r [&_th]:border-white/10 [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-xs
+                [&_td]:p-3.5 [&_td]:text-xs [&_td]:md:text-sm [&_td]:text-[#F3F4F6] [&_td]:border-b [&_td]:border-white/5 [&_td]:border-r [&_td]:border-white/5
+                [&_tr:hover]:bg-white/[0.04] [&_tr:hover]:transition-colors
+                [&_.cta-button-block]:my-8 [&_.cta-button-block_a]:no-underline [&_.cta-button-block_a]:hover:no-underline
+                [&>a]:text-[#FACC15] [&>a]:underline [&>a]:hover:text-[#EAB308] [&>a]:font-semibold
+                [&_a]:text-[#FACC15] [&_a]:underline [&_a]:hover:text-[#EAB308] [&_a]:font-semibold"
+              dangerouslySetInnerHTML={{ __html: formatContentForPreview(currentPost.content) }}
+            />
           </div>
         </div>
       )}
 
       {/* 5. TABLE BUILDER MODAL */}
       {showTableModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#12141b] border border-[#d9b45c]/30 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <h3 className="text-sm font-bold text-white uppercase">Insert Custom Table</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs text-[#c9c2ab]">Rows</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={10}
-                  value={tableRows}
-                  onChange={(e) => setTableRows(parseInt(e.target.value) || 1)}
-                  className="w-full bg-[#07080b] border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                />
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#12141b] border border-[#d9b45c]/30 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center space-x-2">
+                <TableIcon size={18} className="text-[#d9b45c]" />
+                <h3 className="text-sm font-serif font-bold text-white uppercase tracking-wider">Insert Structured Table</h3>
               </div>
+              <button onClick={() => setShowTableModal(false)} className="text-[#c9c2ab] hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* Preset Selector */}
               <div>
-                <label className="text-xs text-[#c9c2ab]">Columns</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={6}
-                  value={tableCols}
-                  onChange={(e) => setTableCols(parseInt(e.target.value) || 1)}
-                  className="w-full bg-[#07080b] border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                />
+                <label className="text-[#c9c2ab] font-bold block mb-1">Table Preset / Template</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTablePreset("comparison");
+                      setTableCols(3);
+                      setTableRows(4);
+                      setTableHeaders(["Feature", "Standard", "Truth Quran Academy"]);
+                    }}
+                    className={`p-2 rounded-xl border text-center transition-all ${
+                      tablePreset === "comparison"
+                        ? "bg-[#d9b45c]/20 border-[#d9b45c] text-[#f2d98a] font-bold"
+                        : "bg-[#07080b] border-white/10 text-[#c9c2ab] hover:border-white/20"
+                    }`}
+                  >
+                    Comparison
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTablePreset("pricing");
+                      setTableCols(3);
+                      setTableRows(3);
+                      setTableHeaders(["Course Name", "Monthly Fee", "Class Duration"]);
+                    }}
+                    className={`p-2 rounded-xl border text-center transition-all ${
+                      tablePreset === "pricing"
+                        ? "bg-[#d9b45c]/20 border-[#d9b45c] text-[#f2d98a] font-bold"
+                        : "bg-[#07080b] border-white/10 text-[#c9c2ab] hover:border-white/20"
+                    }`}
+                  >
+                    Courses & Fee
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTablePreset("schedule");
+                      setTableCols(3);
+                      setTableRows(3);
+                      setTableHeaders(["Days", "Time Slot", "Subject Covered"]);
+                    }}
+                    className={`p-2 rounded-xl border text-center transition-all ${
+                      tablePreset === "schedule"
+                        ? "bg-[#d9b45c]/20 border-[#d9b45c] text-[#f2d98a] font-bold"
+                        : "bg-[#07080b] border-white/10 text-[#c9c2ab] hover:border-white/20"
+                    }`}
+                  >
+                    Schedule
+                  </button>
+                </div>
+              </div>
+
+              {/* Rows & Cols Count */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[#c9c2ab] font-bold block mb-1">Rows Count</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={12}
+                    value={tableRows}
+                    onChange={(e) => setTableRows(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-full bg-[#07080b] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#d9b45c]"
+                  />
+                </div>
+                <div>
+                  <label className="text-[#c9c2ab] font-bold block mb-1">Columns Count</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={5}
+                    value={tableCols}
+                    onChange={(e) => {
+                      const cols = Math.max(1, Math.min(5, parseInt(e.target.value) || 1));
+                      setTableCols(cols);
+                      setTableHeaders((prev) => {
+                        const next = [...prev];
+                        while (next.length < cols) next.push(`Header ${next.length + 1}`);
+                        return next.slice(0, cols);
+                      });
+                    }}
+                    className="w-full bg-[#07080b] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#d9b45c]"
+                  />
+                </div>
+              </div>
+
+              {/* Column Headers input */}
+              <div>
+                <label className="text-[#c9c2ab] font-bold block mb-1.5">Column Header Titles</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {Array.from({ length: tableCols }).map((_, i) => (
+                    <input
+                      key={i}
+                      type="text"
+                      value={tableHeaders[i] || `Col ${i + 1}`}
+                      onChange={(e) => {
+                        const next = [...tableHeaders];
+                        next[i] = e.target.value;
+                        setTableHeaders(next);
+                      }}
+                      placeholder={`Header ${i + 1}`}
+                      className="bg-[#07080b] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-[#f2d98a] outline-none focus:border-[#d9b45c]"
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Preview Box */}
+              <div className="p-3 bg-[#07080b] border border-[#d9b45c]/20 rounded-xl">
+                <span className="text-[10px] uppercase font-bold text-[#d9b45c] block mb-2">Table Preview</span>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-[11px] border border-[#d9b45c]/30 rounded-lg overflow-hidden">
+                    <thead className="bg-[#181b24] text-[#f2d98a]">
+                      <tr>
+                        {Array.from({ length: tableCols }).map((_, i) => (
+                          <th key={i} className="p-2 border-r border-white/10 font-bold">{tableHeaders[i] || `Col ${i + 1}`}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-[#F3F4F6]">
+                      <tr>
+                        {Array.from({ length: tableCols }).map((_, i) => (
+                          <td key={i} className="p-2 border-r border-white/5">Row 1 Sample Data</td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-            <div className="flex justify-end space-x-2 pt-2">
-              <button onClick={() => setShowTableModal(false)} className="px-3 py-1.5 text-xs text-[#c9c2ab]">Cancel</button>
+
+            <div className="flex justify-end space-x-2 pt-2 border-t border-white/10">
               <button
-                onClick={() => {
-                  let html = `<div className="overflow-x-auto my-6"><table className="w-full text-left text-xs border border-[#d9b45c]/30 rounded-2xl bg-[#12141b]"><thead className="bg-[#d9b45c]/20 text-[#f2d98a]"><tr>`;
-                  for (let c = 1; c <= tableCols; c++) html += `<th className="p-3 border-b border-white/10">Header ${c}</th>`;
-                  html += `</tr></thead><tbody>`;
-                  for (let r = 1; r <= tableRows; r++) {
-                    html += `<tr>`;
-                    for (let c = 1; c <= tableCols; c++) html += `<td className="p-3 border-b border-white/5 text-[#c9c2ab]">Data ${r}-${c}</td>`;
-                    html += `</tr>`;
-                  }
-                  html += `</tbody></table></div>`;
-                  const newContent = `${currentPost.content || ""}\n${html}`;
-                  handleUpdateField("content", newContent);
-                  pushHistory(newContent);
-                  setShowTableModal(false);
-                }}
-                className="px-4 py-2 bg-[#d9b45c] text-black font-bold text-xs rounded-xl"
+                type="button"
+                onClick={() => setShowTableModal(false)}
+                className="px-4 py-2 text-xs text-[#c9c2ab] hover:text-white"
               >
-                Insert Table
+                Cancel
               </button>
+              <button
+                type="button"
+                onClick={handleInsertTable}
+                className="px-5 py-2.5 bg-gradient-to-r from-[#d9b45c] to-[#f2d98a] text-black font-extrabold text-xs rounded-xl shadow-lg hover:brightness-110 flex items-center space-x-1.5"
+              >
+                <TableIcon size={14} />
+                <span>Insert Table into Article</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. CALL-TO-ACTION (CTA) BUTTON BUILDER MODAL */}
+      {showCtaModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#12141b] border border-[#d9b45c]/30 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center space-x-2">
+                <MousePointerClick size={18} className="text-[#d9b45c]" />
+                <h3 className="text-sm font-serif font-bold text-white uppercase tracking-wider">
+                  Insert Call-to-Action (CTA) Button
+                </h3>
+              </div>
+              <button onClick={() => setShowCtaModal(false)} className="text-[#c9c2ab] hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* Button Text */}
+              <div>
+                <label className="text-[#c9c2ab] font-bold block mb-1">Button Text (Label)</label>
+                <input
+                  type="text"
+                  value={ctaButtonText}
+                  onChange={(e) => setCtaButtonText(e.target.value)}
+                  placeholder="e.g. Book Free 3-Day Trial Class"
+                  className="w-full bg-[#07080b] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#d9b45c]"
+                />
+              </div>
+
+              {/* Target Link URL */}
+              <div>
+                <label className="text-[#c9c2ab] font-bold block mb-1">Target Link URL</label>
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={ctaLinkUrl}
+                    onChange={(e) => setCtaLinkUrl(e.target.value)}
+                    placeholder="e.g. /contact or https://wa.me/..."
+                    className="flex-1 bg-[#07080b] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#f2d98a] font-mono outline-none focus:border-[#d9b45c]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCtaLinkUrl("/contact")}
+                    className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] text-[#c9c2ab] rounded-lg border border-white/10"
+                  >
+                    /contact
+                  </button>
+                </div>
+              </div>
+
+              {/* Subtitle / Microcopy */}
+              <div>
+                <label className="text-[#c9c2ab] font-bold block mb-1">Optional Subtitle / Guarantee</label>
+                <input
+                  type="text"
+                  value={ctaSubtitle}
+                  onChange={(e) => setCtaSubtitle(e.target.value)}
+                  placeholder="e.g. 1-on-1 Live Online Sessions with Certified Quran Scholars"
+                  className="w-full bg-[#07080b] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#d9b45c]"
+                />
+              </div>
+
+              {/* Style & Color Selector */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[#c9c2ab] font-bold block mb-1">Button Theme</label>
+                  <select
+                    value={ctaStyle}
+                    onChange={(e: any) => setCtaStyle(e.target.value)}
+                    className="w-full bg-[#07080b] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#f2d98a] outline-none"
+                  >
+                    <option value="gold">Gold Luxury Gradient</option>
+                    <option value="royal">Dark Royal Navy Card</option>
+                    <option value="whatsapp">Emerald Green (WhatsApp)</option>
+                    <option value="outline">Gold Outline</option>
+                    <option value="banner">Full Promotional Box Banner</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[#c9c2ab] font-bold block mb-1">Icon Style</label>
+                  <select
+                    value={ctaIcon}
+                    onChange={(e: any) => setCtaIcon(e.target.value)}
+                    className="w-full bg-[#07080b] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                  >
+                    <option value="arrow">Arrow (➔)</option>
+                    <option value="whatsapp">WhatsApp Icon</option>
+                    <option value="phone">Phone Call</option>
+                    <option value="sparkles">Sparkles (✨)</option>
+                    <option value="book">Quran Book (📖)</option>
+                    <option value="none">No Icon</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Alignment & Tab toggle */}
+              <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center space-x-2">
+                  <label className="text-[#c9c2ab] font-bold">Align:</label>
+                  <div className="flex space-x-1">
+                    {(["center", "left", "right", "full"] as const).map((align) => (
+                      <button
+                        key={align}
+                        type="button"
+                        onClick={() => setCtaAlignment(align)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold capitalize transition-all ${
+                          ctaAlignment === align ? "bg-[#d9b45c] text-black" : "bg-[#07080b] text-[#c9c2ab] border border-white/10"
+                        }`}
+                      >
+                        {align}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <label className="flex items-center space-x-1.5 cursor-pointer text-[#c9c2ab]">
+                  <input
+                    type="checkbox"
+                    checked={ctaOpenNewTab}
+                    onChange={(e) => setCtaOpenNewTab(e.target.checked)}
+                    className="accent-[#d9b45c]"
+                  />
+                  <span>Open in New Tab</span>
+                </label>
+              </div>
+
+              {/* Live Preview of Button */}
+              <div className="p-4 bg-[#07080b] border border-[#d9b45c]/20 rounded-2xl text-center space-y-2">
+                <span className="text-[10px] uppercase font-bold text-[#d9b45c] block text-left">Live Button Preview</span>
+                <div className={`py-2 ${ctaAlignment === "left" ? "text-left" : ctaAlignment === "right" ? "text-right" : "text-center"}`}>
+                  <span
+                    className={`inline-flex items-center justify-center px-6 py-2.5 rounded-xl font-bold text-xs shadow-lg cursor-pointer ${
+                      ctaStyle === "gold"
+                        ? "bg-gradient-to-r from-[#d9b45c] to-[#f2d98a] text-black border border-[#d9b45c]"
+                        : ctaStyle === "royal"
+                        ? "bg-[#1c202b] text-[#f2d98a] border-2 border-[#d9b45c]"
+                        : ctaStyle === "whatsapp"
+                        ? "bg-emerald-600 text-white border border-emerald-400"
+                        : ctaStyle === "outline"
+                        ? "bg-transparent text-[#f2d98a] border-2 border-[#d9b45c]"
+                        : "bg-[#d9b45c] text-black border border-[#d9b45c]"
+                    } ${ctaAlignment === "full" ? "w-full" : ""}`}
+                  >
+                    {ctaIcon === "whatsapp" && <span className="mr-1.5">💬</span>}
+                    {ctaIcon === "phone" && <span className="mr-1.5">📞</span>}
+                    {ctaIcon === "sparkles" && <span className="mr-1.5">✨</span>}
+                    {ctaIcon === "book" && <span className="mr-1.5">📖</span>}
+                    <span>{ctaButtonText || "Button Label"}</span>
+                    {ctaIcon === "arrow" && <ArrowRight size={14} className="ml-1.5 inline" />}
+                  </span>
+                  {ctaSubtitle && <p className="text-[10px] text-[#c9c2ab] mt-1 italic">{ctaSubtitle}</p>}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => handleInsertCta("bottom")}
+                className="px-3 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition-all"
+              >
+                Insert at Article End
+              </button>
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCtaModal(false)}
+                  className="px-4 py-2 text-xs text-[#c9c2ab] hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInsertCta("cursor")}
+                  className="px-5 py-2.5 bg-gradient-to-r from-[#d9b45c] to-[#f2d98a] text-black font-extrabold text-xs rounded-xl shadow-lg hover:brightness-110 flex items-center space-x-1.5"
+                >
+                  <MousePointerClick size={14} />
+                  <span>Insert at Cursor</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
